@@ -1,0 +1,7 @@
+<apex:page >
+  <apex:composition template="sample">
+  <apex:define name="Anusha">How are U
+  </apex:define>
+  <apex:define name="Dileep">How is Ur Job Search Going On Likki </apex:define>
+  </apex:composition>
+</apex:page>

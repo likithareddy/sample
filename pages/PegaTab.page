@@ -1,0 +1,8 @@
+<apex:page >
+ <apex:form id="pageForm">
+ <apex:outputPanel >
+<PegaPE:pegaGadgetComponent >
+</PegaPE:pegaGadgetComponent>
+ </apex:outputPanel>
+ </apex:form>
+</apex:page>

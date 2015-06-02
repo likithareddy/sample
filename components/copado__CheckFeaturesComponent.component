@@ -1,0 +1,9 @@
+<apex:component controller="copado.CheckFeaturesController">
+	<script type="text/javascript">
+		try{
+			copado.CheckFeaturesController.checkFeatures(function(){console.log('features checked')});
+		}catch(e){
+			console.log('mute remote checkFeatures error:',e);
+		}
+	</script>
+</apex:component>

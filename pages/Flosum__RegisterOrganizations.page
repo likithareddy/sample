@@ -1,0 +1,83 @@
+<apex:page doctype="HTML-5.0" standardController="Flosum__Organisation__c" extensions="Flosum.RegisterOrganizationController" sidebar="false">
+
+<apex:includeScript value="{!URLFOR($Resource.Flosum__jquery)}"/>
+<style>
+body {
+font-size: 12px;
+}
+.apexp .bPageBlock .detailList {
+width: 450px;
+}
+input.ck.form-control { 
+height: 22px; 
+}
+input.ck.form-control.checkbox {
+width: 4%;
+}
+label.input-label {
+width: 115px;
+}
+input.ck.form-control.checkbox {
+width: 19px;
+}
+input.form-control {
+height: 29px;
+}
+</style>
+
+<apex:outputLabel id="nonevalue">
+ 	<script language="javascript">
+            $(function() {        
+                $('select.RemoveNone option[value=""]').remove();     
+            });
+    </script> 
+</apex:outputLabel>
+
+<c:Wait />
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+		<apex:pagemessages id="msg_cred"/> 
+		<apex:form > 
+		<apex:pageblock title="Add Organizations">
+               <apex:outputpanel layout="block" styleclass="input-group">
+					<apex:pageBlockSection id="creds" rendered="true" columns="1"> 
+						<apex:pageBlockSectionItem >
+					       <apex:outputlabel value="{!$ObjectType.Flosum__Organisation__c.fields.Name.label}" />
+					       <apex:inputField value="{!organizationRecord.Name}" />
+				       </apex:pageBlockSectionItem>
+				       <apex:pageBlockSectionItem >
+					       <apex:outputlabel value="Username" styleclass="input-label"/>
+					       <apex:input type="text" value="{!username}"/>
+				       </apex:pageBlockSectionItem>
+				       <apex:pageBlockSectionItem >
+					       <apex:outputlabel value="{!$ObjectType.Flosum__Organisation__c.fields.Flosum__Organisation_Type__c.label}" />
+					       <apex:inputField value="{!organizationRecord.Flosum__Organisation_Type__c}" styleClass="RemoveNone" />
+				       </apex:pageBlockSectionItem>
+				       <apex:pageBlockSectionItem id="passBlock">
+					       <apex:outputlabel value="Authorization Code" />
+					       <apex:inputsecret value="{!password}" styleclass="pkp"/>   
+				       </apex:pageBlockSectionItem>
+			    	</apex:pageBlockSection>
+			    </apex:outputpanel>
+			    <apex:actionfunction name="checkAndSave" action="{!checkAndSave}" rerender="creds,msg_cred,nonevalue" oncomplete="hide();"/>
+			    <apex:actionfunction name="authorize" action="{!processLogin}" oncomplete="prompt('Copy the following link and open in other browser or in incognito mode to get autorization code', '{!JSENCODE(loginUrl)}');" rerender="msg,nonevalue"></apex:actionfunction> 
+			  
+ 			<apex:pageBlockButtons location="bottom">	   
+				    <apex:commandbutton value="Authorize" onclick="auth(); return false;"/>
+				    <apex:commandbutton action="{!cancelSave}" value="Cancel" />
+			</apex:pageBlockButtons>
+		</apex:pageblock>
+		</apex:form>
+		<script>
+		    
+			function auth() {
+					if($(".pkp").val() == '') {
+						authorize();
+					} else {
+						show();
+						checkAndSave();
+					}
+				return false;
+			}
+		</script>
+</apex:page>

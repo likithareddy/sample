@@ -1,0 +1,23 @@
+<apex:page controller="datatab">
+<apex:form >
+<apex:dataTable value="{!account}" var="a"  rowclasses="odd,even" styleClass="tableClass">
+<apex:facet name="caption">List of Accounts</apex:facet>
+
+<apex:column >
+<apex:facet name="header">Name</apex:facet>
+<apex:outputText value="{!a.Name}"/>
+</apex:column>
+
+<apex:column >
+<apex:facet name="header">Phone Number</apex:facet>
+<apex:outputText value="{!a.Phone}"/>
+</apex:column>
+
+<apex:column >
+<apex:facet name="header">Type</apex:facet>
+<apex:outputText value="{!a.Type} "/>
+</apex:column>
+</apex:dataTable>
+</apex:form>
+  
+</apex:page>

@@ -1,0 +1,626 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionOverrides>
+        <actionName>Accept</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>CancelEdit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Clone</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Delete</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Edit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Follow</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>List</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>New</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>SaveEdit</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>Tab</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>View</actionName>
+        <type>Default</type>
+    </actionOverrides>
+    <compactLayoutAssignment>SYSTEM</compactLayoutAssignment>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <deprecated>false</deprecated>
+    <description>Configuration settings that are required in order to display a Pega Application in a Force.com TAB</description>
+    <enableActivities>false</enableActivities>
+    <enableBulkApi>true</enableBulkApi>
+    <enableFeeds>false</enableFeeds>
+    <enableHistory>true</enableHistory>
+    <enableReports>true</enableReports>
+    <enableSharing>true</enableSharing>
+    <enableStreamingApi>true</enableStreamingApi>
+    <fields>
+        <fullName>PegaPE__Division__c</fullName>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <label>Division</label>
+        <picklist>
+            <picklistValues>
+                <fullName>None</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Pega SFDC SSO Division</fullName>
+                <default>false</default>
+            </picklistValues>
+            <sorted>false</sorted>
+        </picklist>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>PegaPE__Organization__c</fullName>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <label>Organization</label>
+        <picklist>
+            <picklistValues>
+                <fullName>None</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Pega SFDC SSO Org</fullName>
+                <default>false</default>
+            </picklistValues>
+            <sorted>false</sorted>
+        </picklist>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>PegaPE__PRPC_Version__c</fullName>
+        <deprecated>false</deprecated>
+        <description>The Pega Extender uses an application framework that is specific to the version of Pega PRPC server that is accessed. Please select your version of the Pega PRPC server.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Please select your version of the Pega PRPC server.</inlineHelpText>
+        <label>PRPC Version</label>
+        <picklist>
+            <picklistValues>
+                <fullName>PRPC 7.1</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>PRPC 6.3 SP1</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>PRPC 6.3</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>PRPC 6.2 SP2</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>PRPC 6.2 SP1</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>PRPC 6.2</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>PRPC 6.1 SP2</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>PRPC 6.1 SP1</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>PRPC 6.1</fullName>
+                <default>false</default>
+            </picklistValues>
+            <sorted>false</sorted>
+        </picklist>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>PegaPE__PegaA__c</fullName>
+        <deprecated>false</deprecated>
+        <description>Pega Gadget Attributes: The action to perform in the selected Gadget</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Select the appropriate action the Gadget Manager executes when it loads the gadget, that is, the default or main action.</inlineHelpText>
+        <label>Pega Action</label>
+        <picklist>
+            <picklistValues>
+                <fullName>None</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Action 1</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Action 2</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Action 3</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Action 4</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Action 5</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Open Work By Url</fullName>
+                <default>false</default>
+            </picklistValues>
+            <sorted>false</sorted>
+        </picklist>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>PegaPE__PegaA_className__c</fullName>
+        <deprecated>false</deprecated>
+        <description>Pega Gadget Attributes: The class that the action option applies to if the selected Pega Gadget Action is display, createNewWork, or getNextWork</description>
+        <externalId>false</externalId>
+        <inlineHelpText>If the Pega Gadget Action is display, createNewWork, or getNextWork, specify the class that is applicable for the specified flow or harness</inlineHelpText>
+        <label>Pega Action Class Name</label>
+        <picklist>
+            <picklistValues>
+                <fullName>None</fullName>
+                <default>false</default>
+            </picklistValues>
+            <sorted>false</sorted>
+        </picklist>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>PegaPE__PegaA_flowName__c</fullName>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <label>Pega Action Flow Name</label>
+        <picklist>
+            <picklistValues>
+                <fullName>None</fullName>
+                <default>false</default>
+            </picklistValues>
+            <sorted>false</sorted>
+        </picklist>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>PegaPE__PegaA_harnessName__c</fullName>
+        <deprecated>false</deprecated>
+        <description>Pega Gadget Attributes: The name of the appropriate harness if the Pega Action is display</description>
+        <externalId>false</externalId>
+        <inlineHelpText>When the action is display, select the name of a harness rule.</inlineHelpText>
+        <label>Pega Harness Name</label>
+        <picklist>
+            <picklistValues>
+                <fullName>None</fullName>
+                <default>false</default>
+            </picklistValues>
+            <sorted>false</sorted>
+        </picklist>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>PegaPE__PegaA_pyReportClass__c</fullName>
+        <deprecated>false</deprecated>
+        <description>PegaA_pyReportClass is to be provided when a Report Definition Harness is to be called using PegaA_query=&quot;?pyActivity=Rule-Obj-Report-Definition.pxShowReport&quot;</description>
+        <externalId>false</externalId>
+        <inlineHelpText>PegaA_pyReportClass is to be provided when a Report Definition Harness is to be called using PegaA_query=&quot;?pyActivity=Rule-Obj-Report-Definition.pxShowReport&quot;</inlineHelpText>
+        <label>Pega Action Report Class Name</label>
+        <picklist>
+            <picklistValues>
+                <fullName>None</fullName>
+                <default>false</default>
+            </picklistValues>
+            <sorted>false</sorted>
+        </picklist>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>PegaPE__PegaA_pyReportName__c</fullName>
+        <deprecated>false</deprecated>
+        <description>Report Definition Name which needs to be displayed</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Report Definition Name which needs to be displayed E.g. MyWeeklyReport</inlineHelpText>
+        <label>Pega Action Report Name</label>
+        <length>100</length>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>PegaPE__PegaA_query__c</fullName>
+        <deprecated>false</deprecated>
+        <description>Pega Gadget Attributes: The name of the PegaGadget - NOTE: Not included in the IAC Gadget Manager Reference documentation</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Enter the appropriate Pega Action Query E.g. ?pyActivity=Rule-Obj-Report-Definition.pxShowReport to call a Report Definition</inlineHelpText>
+        <label>Pega Query</label>
+        <length>255</length>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>PegaPE__PegaA_readOnly__c</fullName>
+        <defaultValue>false</defaultValue>
+        <deprecated>false</deprecated>
+        <description>Pega Gadget Attributes: Read Only</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Select to make this Pega Gadget is Read Only</inlineHelpText>
+        <label>Pega Read Only</label>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>PegaPE__PegaDefer__c</fullName>
+        <defaultValue>false</defaultValue>
+        <deprecated>false</deprecated>
+        <description>Specifies whether the default action specified (PegaA=&quot;getNextWork&quot;, for example) occurs when the Gadget Manager first loads the page or whether the action should wait until it is invoked through a doaction by the page JavaScript or a gadget action in another gadget. Values: true, false</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Select to defer loading of the Application page. This will require that the page load be initiated with a Javascript function instead of application page load</inlineHelpText>
+        <label>Pega Action Defer</label>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>PegaPE__PegaGadget__c</fullName>
+        <deprecated>false</deprecated>
+        <description>Pega Gadget Attributes: The name of the PegaGadget</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Select the appropriate Pega Gadget to display</inlineHelpText>
+        <label>Pega Gadget Name</label>
+        <picklist>
+            <picklistValues>
+                <fullName>None</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Gadget 1</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Gadget 2</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Gadget 3</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Gadget 4</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Gadget 5</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>samplepegagacasegadget</fullName>
+                <default>false</default>
+            </picklistValues>
+            <sorted>false</sorted>
+        </picklist>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>PegaPE__PegaResize__c</fullName>
+        <deprecated>false</deprecated>
+        <description>Pega Gadget Attributes: The resize option setting</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Select the appropriate window resize option</inlineHelpText>
+        <label>Pega Resize Option</label>
+        <picklist>
+            <picklistValues>
+                <fullName>None</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Stretch</fullName>
+                <default>false</default>
+            </picklistValues>
+            <sorted>false</sorted>
+        </picklist>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>PegaPE__PegaTarget__c</fullName>
+        <deprecated>false</deprecated>
+        <description>Pega Gadget Attributes: The location of the window that the Pega Gadget is displayed in</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Select the Pega Gadget Window location option</inlineHelpText>
+        <label>Pega Window Target Option</label>
+        <picklist>
+            <picklistValues>
+                <fullName>_self</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>_popup</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>_blank</fullName>
+                <default>false</default>
+            </picklistValues>
+            <sorted>false</sorted>
+        </picklist>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>PegaPE__PegaThread__c</fullName>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <label>Pega Thread</label>
+        <picklist>
+            <picklistValues>
+                <fullName>None</fullName>
+                <default>false</default>
+            </picklistValues>
+            <sorted>false</sorted>
+        </picklist>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>PegaPE__Unit__c</fullName>
+        <deprecated>false</deprecated>
+        <externalId>false</externalId>
+        <label>Unit</label>
+        <picklist>
+            <picklistValues>
+                <fullName>None</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Pega SFDC SSO Unit</fullName>
+                <default>false</default>
+            </picklistValues>
+            <sorted>false</sorted>
+        </picklist>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>PegaPE__appName__c</fullName>
+        <deprecated>false</deprecated>
+        <description>Pega Configuration Object Attribute. Maps directly to the Pega IAC &quot;pega.web.config.appName&quot; parameter.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Select the appropriate application to display</inlineHelpText>
+        <label>Application Name</label>
+        <picklist>
+            <picklistValues>
+                <fullName>None</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>UCMFW</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Pega Rules</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>UservInsuranceProducts</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>MSFW</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>CustomReportApplication</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>CustomProcessApplication</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Force Fulfillment</fullName>
+                <default>false</default>
+            </picklistValues>
+            <sorted>false</sorted>
+        </picklist>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>PegaPE__encrypt__c</fullName>
+        <defaultValue>false</defaultValue>
+        <deprecated>false</deprecated>
+        <description>Pega Configuration Object Attribute. Maps directly to the Pega IAC &quot;pega.web.config.encrypt&quot; parameter.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Select to encrypt browser communications</inlineHelpText>
+        <label>Encrypt</label>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Checkbox</type>
+    </fields>
+    <fields>
+        <fullName>PegaPE__gatewayUrl__c</fullName>
+        <deprecated>false</deprecated>
+        <description>Pega Configuration Object Attribute. Maps directly to the Pega IAC &quot;pega.web.config.gatewayUrl&quot; parameter.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Select the appropriate Gateway URL based on whether you are an Internal, External or External Through Gateway user.</inlineHelpText>
+        <label>Gateway URL</label>
+        <picklist>
+            <picklistValues>
+                <fullName>None</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Gate Way URL 1</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Gate Way URL 2</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Gate Way URL 3</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Gate Way URL 4</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Gate Way URL 5</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>https://www.google.com</fullName>
+                <default>false</default>
+            </picklistValues>
+            <sorted>false</sorted>
+        </picklist>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>PegaPE__style__c</fullName>
+        <deprecated>false</deprecated>
+        <description>Pega Gadget Attributes: Standard CSS display markup for the Gadget Window</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Enter appropriate stylistic CSS markup to control the Pega Gadget display</inlineHelpText>
+        <label>Style CSS Markup</label>
+        <length>255</length>
+        <required>false</required>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Text</type>
+        <unique>false</unique>
+    </fields>
+    <fields>
+        <fullName>PegaPE__systemID__c</fullName>
+        <deprecated>false</deprecated>
+        <description>Pega Configuration Object Attribute. Maps directly to the Pega IAC &quot;pega.web.config.systemID&quot; parameter.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Select the appropriate Sytem ID</inlineHelpText>
+        <label>System ID</label>
+        <picklist>
+            <picklistValues>
+                <fullName>None</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>mobile</fullName>
+                <default>false</default>
+            </picklistValues>
+            <sorted>false</sorted>
+        </picklist>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <fields>
+        <fullName>PegaPE__thread__c</fullName>
+        <deprecated>false</deprecated>
+        <description>Pega Configuration Object Attribute. Maps directly to the Pega IAC &quot;pega.web.config.thread&quot; parameter.</description>
+        <externalId>false</externalId>
+        <inlineHelpText>Select the appropriate Thread model</inlineHelpText>
+        <label>Thread</label>
+        <picklist>
+            <picklistValues>
+                <fullName>STANDARD</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Thread 1</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Thread 2</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Thread 3</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Thread 4</fullName>
+                <default>false</default>
+            </picklistValues>
+            <picklistValues>
+                <fullName>Thread 5</fullName>
+                <default>false</default>
+            </picklistValues>
+            <sorted>false</sorted>
+        </picklist>
+        <trackHistory>false</trackHistory>
+        <trackTrending>false</trackTrending>
+        <type>Picklist</type>
+    </fields>
+    <label>Pega Gadget Configuration</label>
+    <listViews>
+        <fullName>PegaPE__All</fullName>
+        <filterScope>Everything</filterScope>
+        <label>All</label>
+    </listViews>
+    <nameField>
+        <label>Configuration Identifier</label>
+        <trackHistory>false</trackHistory>
+        <type>Text</type>
+    </nameField>
+    <pluralLabel>Pega Gadget Configurations</pluralLabel>
+    <searchLayouts/>
+    <sharingModel>ReadWrite</sharingModel>
+</CustomObject>

@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fields>
+        <label><!-- API Name --></label>
+        <name>Flosum__API_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Attachment ID --></label>
+        <name>Flosum__Attachment_ID__c</name>
+    </fields>
+    <fields>
+        <label><!-- CRC32 --></label>
+        <name>Flosum__CRC32__c</name>
+    </fields>
+    <fields>
+        <label><!-- Folder --></label>
+        <name>Flosum__Folder__c</name>
+    </fields>
+    <fields>
+        <label><!-- Is Retrieved --></label>
+        <name>Flosum__Is_Retrieved__c</name>
+    </fields>
+    <fields>
+        <label><!-- Label --></label>
+        <name>Flosum__Label__c</name>
+    </fields>
+    <fields>
+        <label><!-- Last Modified Date --></label>
+        <name>Flosum__Last_Modified_Date__c</name>
+    </fields>
+    <fields>
+        <label><!-- Last Updated By --></label>
+        <name>Flosum__Last_Updated_By__c</name>
+    </fields>
+    <fields>
+        <label><!-- Name --></label>
+        <name>Flosum__Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- Snapshot --></label>
+        <name>Flosum__Snapshot__c</name>
+        <relationshipLabel><!-- Metadata Items --></relationshipLabel>
+    </fields>
+    <recordTypes>
+        <label><!-- ApexClass --></label>
+        <name>ApexClass</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- ApexComponent --></label>
+        <name>ApexComponent</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- ApexPage --></label>
+        <name>ApexPage</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- ApexTrigger --></label>
+        <name>ApexTrigger</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- AppMenu --></label>
+        <name>AppMenu</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- ApprovalProcess --></label>
+        <name>ApprovalProcess</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- AssignmentRule --></label>
+        <name>AssignmentRule</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- AssignmentRules --></label>
+        <name>AssignmentRules</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- AutoResponseRule --></label>
+        <name>AutoResponseRule</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- AutoResponseRules --></label>
+        <name>AutoResponseRules</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- BaseSharingRule --></label>
+        <name>BaseSharingRule</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- CompactLayout --></label>
+        <name>CompactLayout</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- CriteriaBasedSharingRule --></label>
+        <name>CriteriaBasedSharingRule</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- CustomApplication --></label>
+        <name>CustomApplication</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- CustomApplicationComponent --></label>
+        <name>CustomApplicationComponent</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- CustomField --></label>
+        <name>CustomField</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- CustomLabel --></label>
+        <name>CustomLabel</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- CustomLabels --></label>
+        <name>CustomLabels</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- CustomObject --></label>
+        <name>CustomObject</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- CustomPageWebLink --></label>
+        <name>CustomPageWebLink</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- CustomPermission --></label>
+        <name>CustomPermission</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- CustomTab --></label>
+        <name>CustomTab</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- Dashboard --></label>
+        <name>Dashboard</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- DashboardFolder --></label>
+        <name>DashboardFolder</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- Document --></label>
+        <name>Document</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- DocumentFolder --></label>
+        <name>DocumentFolder</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- EmailFolder --></label>
+        <name>EmailFolder</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- EmailTemplate --></label>
+        <name>EmailTemplate</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- EmailTemplateFolder --></label>
+        <name>EmailTemplateFolder</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- EntitlementProcess --></label>
+        <name>EntitlementProcess</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- EntitlementTemplate --></label>
+        <name>EntitlementTemplate</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- FieldSet --></label>
+        <name>FieldSet</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- FlexiPage --></label>
+        <name>FlexiPage</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- Group --></label>
+        <name>Group</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- HomePageComponent --></label>
+        <name>HomePageComponent</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- HomePageLayout --></label>
+        <name>HomePageLayout</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- Layout --></label>
+        <name>Layout</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- ListView --></label>
+        <name>ListView</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- MilestoneType --></label>
+        <name>MilestoneType</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- PermissionSet --></label>
+        <name>PermissonSet</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- Profile --></label>
+        <name>Profile</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- Queue --></label>
+        <name>Queue</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- RecordType --></label>
+        <name>RecordType</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- RemoteSiteSetting --></label>
+        <name>RemoteSiteSetting</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- Report --></label>
+        <name>Report</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- ReportFolder --></label>
+        <name>ReportFolder</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- ReportType --></label>
+        <name>ReportType</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- Role --></label>
+        <name>Role</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- Settings --></label>
+        <name>Settings</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- StaticResource --></label>
+        <name>StaticResource</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- ValidationRule --></label>
+        <name>ValidationRule</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- WebLink --></label>
+        <name>WebLink</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- Workflow --></label>
+        <name>Workflow</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- WorkflowAlert --></label>
+        <name>WorkflowAlert</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- WorkflowFieldUpdate --></label>
+        <name>WorkflowFieldUpdate</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- WorkflowOutboundMessage --></label>
+        <name>WorkflowOutboundMessage</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- WorkflowRule --></label>
+        <name>WorkflowRule</name>
+    </recordTypes>
+    <recordTypes>
+        <label><!-- WorkflowTask --></label>
+        <name>WorkflowTask</name>
+    </recordTypes>
+</CustomObjectTranslation>

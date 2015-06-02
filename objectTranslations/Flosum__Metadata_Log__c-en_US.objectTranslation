@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fields>
+        <label><!-- Async Request Id --></label>
+        <name>Flosum__Async_Request_Id__c</name>
+    </fields>
+    <fields>
+        <label><!-- Batch Job Id --></label>
+        <name>Flosum__Batch_Job_Id__c</name>
+    </fields>
+    <fields>
+        <label><!-- Error Log --></label>
+        <name>Flosum__Error_Log__c</name>
+    </fields>
+    <fields>
+        <label><!-- Job Completed? --></label>
+        <name>Flosum__Job_Completed__c</name>
+    </fields>
+    <fields>
+        <label><!-- Metadata Types --></label>
+        <name>Flosum__Metadata_Types__c</name>
+    </fields>
+    <fields>
+        <label><!-- Organization --></label>
+        <name>Flosum__Organisation__c</name>
+        <relationshipLabel><!-- Metadata Logs --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Patch --></label>
+        <name>Flosum__Patch__c</name>
+        <relationshipLabel><!-- Metadata Logs --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Process Log --></label>
+        <name>Flosum__Process_Log__c</name>
+    </fields>
+    <fields>
+        <label><!-- Process Type --></label>
+        <name>Flosum__Process_Type__c</name>
+        <picklistValues>
+            <masterLabel>Deployment</masterLabel>
+            <translation><!-- Deployment --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Patch</masterLabel>
+            <translation><!-- Patch --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Retrieve</masterLabel>
+            <translation><!-- Retrieve --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Validate</masterLabel>
+            <translation><!-- Validate --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Snapshot --></label>
+        <name>Flosum__Snapshot__c</name>
+        <relationshipLabel><!-- Metadata Logs --></relationshipLabel>
+    </fields>
+    <fields>
+        <label><!-- Status --></label>
+        <name>Flosum__Status__c</name>
+        <picklistValues>
+            <masterLabel>Completed</masterLabel>
+            <translation><!-- Completed --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Exception</masterLabel>
+            <translation><!-- Exception --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>In Progress</masterLabel>
+            <translation><!-- In Progress --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Succeed? --></label>
+        <name>Flosum__Succeed__c</name>
+    </fields>
+    <fields>
+        <label><!-- Success Log --></label>
+        <name>Flosum__Success_Log__c</name>
+    </fields>
+    <fields>
+        <label><!-- Total Items --></label>
+        <name>Flosum__Total_Items__c</name>
+    </fields>
+</CustomObjectTranslation>

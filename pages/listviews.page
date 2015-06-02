@@ -1,0 +1,7 @@
+<apex:page >
+  <apex:ListViews type="Account"/>
+  <apex:ListViews type="contact"/>
+  <apex:ListViews type="Opportunity"/>
+  <apex:ListViews type="Lead"/>
+  <apex:ListViews type="Campaign"/>
+</apex:page>

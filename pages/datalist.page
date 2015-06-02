@@ -1,0 +1,7 @@
+<apex:page controller="exm">
+<apex:dataList value="{!account}" var="a">
+<apex:outputText value="{!a.Name}"/>
+<apex:outputText value="{!a.Phone}"/>
+</apex:dataList>
+ 
+</apex:page>

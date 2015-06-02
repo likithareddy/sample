@@ -1,0 +1,11 @@
+<apex:page standardController="Document" extensions="fileupload">
+ <apex:messages />
+ <apex:form >
+ <apex:pageBlock >
+ <apex:pageBlockSection >
+ <apex:inputFile value="{!document.body}" fileName="{!document.name}"/>
+ <apex:commandButton value="save" action="{!save}"/>
+ </apex:pageBlockSection>
+ </apex:pageBlock>
+ </apex:form> 
+</apex:page>

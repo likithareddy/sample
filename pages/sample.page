@@ -1,0 +1,7 @@
+<apex:page >
+  <apex:outputText value="Hai Likitha"/><br/>
+  <apex:insert name="Anusha"/><br/>
+  <apex:outputText value="You Should Get The Job On Salesforce"/><br/>
+  <apex:insert name="Dileep"/><br/>
+  
+</apex:page>

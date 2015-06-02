@@ -1,0 +1,4 @@
+<apex:page >
+ <apex:includeScript value="{!$Resource.requirement}"/>
+ <a href="#" onclick="email_validate();">Field</a>
+</apex:page>

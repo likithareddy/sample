@@ -1,0 +1,34 @@
+<apex:component access="global" controller="PegaPE.PegaGadgetController">
+    <apex:includeScript value="/soap/ajax/25.0/connection.js"/>
+    <apex:includeScript value="{!
+    	IF(gadget.iacLibraryString == 'PegaIAC_62_BG_tweaked', $Resource.PegaIAC_62_BG_tweaked,
+    		IF(gadget.iacLibraryString == 'PRPC 6.1', $Resource.PRPC_61,
+    			IF(gadget.iacLibraryString == 'PRPC 6.1 SP1', $Resource.PRPC_61_SP1,
+    				IF(gadget.iacLibraryString == 'PRPC 6.1 SP2', $Resource.PRPC_61_SP2,
+    					IF(gadget.iacLibraryString == 'PRPC 6.2', $Resource.PRPC_62,
+    						IF(gadget.iacLibraryString == 'PRPC 6.2 SP1', $Resource.PRPC_62_SP1,
+    							IF(gadget.iacLibraryString == 'PRPC 6.2 SP2', $Resource.PRPC_62_SP2,
+    								IF(gadget.iacLibraryString == 'PRPC 6.3', $Resource.PRPC_63,
+    									IF(gadget.iacLibraryString == 'PRPC 6.3 SP1', $Resource.PRPC_63_SP1,
+    										IF(gadget.iacLibraryString == 'PRPC 7.1', $Resource.PRPC_71,'')
+   										)
+									)
+								)
+							)
+						)
+					)
+				)
+			)
+		)
+   	}"/>
+    <script type="text/javascript">
+        sforce.connection.sessionId = "{!$Api.Session_ID}";
+    </script>
+    <apex:attribute access="global" name="customParameters" 
+        assignTo="{!customParams}" 
+        description="Pega Custom Parameters" 
+        type="PegaPE.PegaCustomParameters" 
+        required="false" />
+    <apex:outputText escape="false" value="{!gadget.iacScriptBlock}"/>
+    <apex:outputText escape="false" value="{!gadget.iacDisplayBlock}"/>
+</apex:component>

@@ -1,0 +1,25 @@
+<apex:page controller="Emailsending">
+<apex:messages />
+<apex:pageBlock title="Send an Email to {!account.Name} Respresentatives">
+<p>The contacts related to account id that u have passed were as follows</p>
+<apex:dataTable var="c" value="{!account.Contacts}" border="1">
+<apex:column >
+<apex:facet name="header">Name</apex:facet>{!c.Name}
+</apex:column>
+<apex:column >
+<apex:facet name="header">Email</apex:facet>{!c.Email}
+</apex:column>
+</apex:dataTable>
+<p>Inorder to send an email you need to fill the following details</p>
+<apex:form >
+<apex:outputLabel value="subject" for="subject"/><br/>
+<apex:inputText value="{!subject}" id="subject" maxlength="80"/><br/>
+<apex:outputLabel value="body"/><br/>
+<apex:inputTextarea value="{!body}" rows="10" cols="60"/><br/>
+<apex:commandButton value="Send Email" action="{!sendemail}"/><br/>
+</apex:form>
+
+</apex:pageBlock>
+
+  
+</apex:page>

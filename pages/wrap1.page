@@ -1,0 +1,25 @@
+<apex:page controller="Wrapperclass1">
+<apex:pageMessages ></apex:pageMessages>
+<apex:form >
+<apex:pageBlock id="pg">
+   <apex:pageBlockTable value="{!temp}" var="q">
+           <apex:column >
+               <apex:facet name="header">
+               <apex:inputCheckbox value="{!bool}">
+                   <apex:actionSupport reRender="pg" action="{!selectall}" event="onchange"/>
+               </apex:inputCheckbox>
+               </apex:facet>
+               <apex:inputCheckbox value="{!q.ischecked}"/>
+           </apex:column>
+           
+           <apex:column value="{!q.a.Name}"/>
+           <apex:column value="{!q.a.Phone}"/>
+           <apex:column value="{!q.a.Description}"/>
+           
+   </apex:pageBlockTable>
+   <apex:pageBlockButtons >
+   <apex:commandButton value="deleteall" action="{!deleteall}"/>
+   </apex:pageBlockButtons>
+</apex:pageBlock>
+ </apex:form> 
+</apex:page>

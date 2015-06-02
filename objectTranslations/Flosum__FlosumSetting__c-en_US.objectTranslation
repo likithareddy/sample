@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fields>
+        <label><!-- Compare Enabled --></label>
+        <name>Flosum__Compare_Enabled__c</name>
+    </fields>
+    <fields>
+        <label><!-- Configuration Only --></label>
+        <name>Flosum__Configuration_Only__c</name>
+    </fields>
+    <fields>
+        <label><!-- Metadata Type Name --></label>
+        <name>Flosum__Metadata_Type_Name__c</name>
+    </fields>
+    <fields>
+        <label><!-- is Enabled (Retrieval) --></label>
+        <name>Flosum__is_Enabled__c</name>
+    </fields>
+</CustomObjectTranslation>

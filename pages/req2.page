@@ -1,0 +1,32 @@
+<apex:page id="pg">
+
+    <script language="JavaScript">
+    
+    function number_validate()
+    {
+        alert('test');
+        
+        var regMail = /^\d{2},\d{2},\d{2},\d{2},\d{2},\d{2},\d{2}$/;
+       // var regMail = /^(\d{1,2}[,]\d{1,2})+?$/;
+        
+        var check = document.getElementById('{!$Component.pg.fm.pb.data}').value;
+        alert(regMail);
+        alert(check);
+        if(regMail.test(check))
+        {
+            alert('You entered correct number'); 
+        }
+        else
+        {
+            alert('you entered an invalid number');
+        }
+    
+    }
+    
+    </script>
+    <apex:form id="fm">
+        <apex:pageBlock id="pb">Enter the Number
+            <apex:inputText maxlength="20" id="data" onchange="number_validate('{!$Component.pg.fm.pb.data}')"  />
+            </apex:pageBlock>
+            </apex:form>
+            </apex:page>

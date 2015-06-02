@@ -1,0 +1,1669 @@
+<apex:page controller="Flosum.ComponentPatchDeployController" sidebar="false">
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<!-- <apex:includeScript value="{!URLFOR($Resource.jsziporig, '/jszip.js')}"/> -->
+<!-- <apex:includeScript value="{!URLFOR($Resource.jsziporig, '/jszip-load.js')}"/> -->
+<!-- <apex:includeScript value="{!URLFOR($Resource.jsziporig, '/jszip-deflate.js')}"/> -->
+<!-- <apex:includeScript value="{!URLFOR($Resource.jsziporig, '/jszip-inflate.js')}"/> -->
+<apex:includeScript value="{!URLFOR($Resource.Flosum__jszipmaster, 'jszip-master/dist/jszip.js')}"/>
+<script src="{!$Resource.xmltojson}"></script>
+<script src="https://x2js.googlecode.com/hg/xml2json.js"></script>
+<c:Wait />
+	<apex:form id="formid">
+		<apex:pagemessages id="msg"/>
+		<apex:actionfunction name="deploy" action="{!deploy}" rerender="msg" onComplete="checkRequest('{!status}','','{!metaType}');">
+			<apex:param assignTo="{!base64AttBody}" value="" name="newstr"/>
+			<apex:param assignTo="{!metaType}" value="" name="type"/>
+		</apex:actionfunction>
+		<apex:actionfunction action="{!saveAttachment}" name="saveAttachments" rerender="msg" onComplete="checkAttachmentStatus();">
+			<apex:param assignTo="{!base64AttBody}" value="" name="newstr"/>
+			<apex:param assignTo="{!attPostFix}" value="" name="attPostFix"/>
+		</apex:actionfunction>	
+		<apex:actionfunction name="checkAsyncRequest" action="{!checkStatus}" reRender="msg" onComplete="checkRequest('{!status}','{!problemItems}','{!metaType}');"/>
+		<apex:actionfunction name="allDeployOperationComplete" action="{!allDeployOperationComplete}" reRender="msg" onComplete="enableBoth();"/>
+		<apex:pageblock Title="Metadata Deployment" id="block">
+			<apex:pageBlockButtons >
+		        <apex:commandButton action="{!validate}" value="Deploy" onClick="disableBoth();" styleClass="disableitem" rendered="{!AND(organisationTargetName != null,organisationTargetName != '',authSuccesfull)}" reRender="msg" onComplete="collectItems({!isValid},{!isRepository});"/>
+		    </apex:pageBlockButtons>
+			<apex:pageBlockSection columns="1">
+		        <apex:pageBlockSectionItem >
+		            <apex:outputLabel value="Patch Name" />
+		            <apex:outputLabel value="{!patchName}" />
+		        </apex:pageBlockSectionItem>
+		        <apex:pageBlockSectionItem rendered="{!AND(patchId != null,patchId != '')}">
+		            <apex:outputLabel value="Target Salesforce Organisation" />
+		            <apex:selectList size="1" value="{!organisationTargetName}" styleClass="disableitem">
+		                <apex:selectOptions value="{!organisationTarget}"/>
+		                <apex:actionSupport event="onchange"  action="{!setUpAuthentication}" rerender="msg,block" onsubmit="show();" oncomplete="hide();"/>
+		            </apex:selectList>
+		        </apex:pageBlockSectionItem> 
+	        </apex:pageBlockSection>
+		</apex:pageblock>
+		<apex:actionfunction action="{!showMessage}" reRender="msg" name="showMessage" onComplete="hide();">
+			<apex:param assignTo="{!message}" value="" name="newstr"/>
+		</apex:actionfunction>
+	</apex:form>
+	<script>
+		var patchId = '{!JSENCODE($CurrentPage.parameters.pid)}';
+		var attachmentMap = {};
+		var attIds = [];
+		var metaItems = [];
+		var patchList = {};
+		var metaTypeList = [];
+		var finalPatchList = [];
+		var mmap = new Object();
+		var finalZip = new JSZip();
+		var currentZip = new JSZip();
+		var totalSnap = 0;
+ 		var totalAtt = 0;
+		Visualforce.remoting.timeout = 120000;
+	    mmap['CustomField'] = true;
+	    mmap['CustomLabel'] = true;
+	    mmap['CompactLayout'] = true;
+	    mmap['WebLink'] = true;
+	    mmap['RecordType'] = true;
+	    mmap['ListView'] = true;
+	    mmap['FieldSet'] = true;
+	    mmap['AssignmentRule'] = true;
+	    mmap['AutoResponseRule'] = true;
+	    mmap['ValidationRule'] = true;
+	    mmap['WorkflowTask'] = true;
+		mmap['WorkflowOutboundMessage'] = true;
+		mmap['WorkflowFieldUpdate'] = true;
+		mmap['WorkflowAlert'] = true;
+		mmap['WorkflowRule'] = true;
+	    var xmlname= 'package.xml';	
+	    var xmldata= '';
+	    var attSaveIndex = 0;
+	    var attPostFix = '';
+	    var limitofZip = 2500000;
+	    
+	    //save Attachments
+	    function checkAttachmentStatus()
+	    {
+	    	var atts = patchList['Patch'];
+	    	if(atts.length > 0 && attSaveIndex < atts.length)
+	    	{
+	    		if(attSaveIndex == 0)
+	    		{	
+	    			attPostFix = 'A';
+	    			saveAttachments(""+atts[attSaveIndex],attPostFix);
+	    		}
+	    		else
+	    		{
+	    			attPostFix = ""+succ(attPostFix);
+		    		saveAttachments(""+atts[attSaveIndex],attPostFix);
+	    		}
+	    		attSaveIndex++;
+	    	}
+	    	else
+	    	{
+	    		console.log('All attachment saved');
+	    		startDeployment();
+	    		
+	    	}
+	    }
+	    
+	    // deploy final remaining components    
+	    function finalDeployment()
+	    {
+	    	console.log('In final deployment');
+	    	if(finalPatchList.length > 0)
+	    	{
+	    		var base64Str = finalPatchList[0];
+				currentZip = new JSZip(base64Str, {base64:true});				
+				//deploy remaining finalZip
+				deploy(base64Str,'Remaining Components');
+				finalPatchList.shift(0);
+	    	}
+	    	else
+	    	{
+	    		//End of deployment
+				console.log('End of deployment');    
+				allDeployOperationComplete();
+	    	}
+	    }
+	    
+	    function checkRequest(status,errorItems,currentType) 
+		{
+			try
+			{
+				console.log('In checkRequest');
+				console.log('status--:'+status);
+				console.log('errorItems--:'+errorItems);
+				console.log('currentType--:'+currentType);
+				var gap;
+				if(status == 'CHECK STATUS')
+				{
+					console.log(currentType+'--CHECK STATUS again');
+					// Check status
+					gap = setTimeout(checkAsyncRequest, 3000);
+				}
+				else if(status == 'NO PERMISSION')
+				{
+					allDeployOperationComplete();
+				}
+				else if(currentType == 'Remaining Components')
+				{
+					if(status == 'DONE SUCCESSFULLY')
+					{
+						console.log(currentType+' DONE SUCCESSFULLY');
+						//dploy next item.
+						finalDeployment();
+					}
+					else if(status == 'DONE WITH VALIDATION ERROR')
+					{
+						if(errorItems != null && errorItems != undefined && errorItems != "package.xml")
+						{
+							var errorLi = errorItems.split(',');
+							console.log('errorLi---:'+errorLi);
+							if(errorLi.length > 0)
+							{
+								
+								for(var index in errorLi)
+								{
+									if(index < errorLi.length)
+									{
+										var fileName = errorLi [index];
+										if(currentZip.files[fileName] != undefined) 
+					                 	{
+					                 		currentZip.remove(fileName);
+					                 		if(currentZip.files[fileName+"-meta.xml"] != undefined)
+						  	 				{
+						  	 					currentZip.remove(fileName+"-meta.xml");
+						  	 				}
+					                 	}
+					                 	else
+					                 	{
+					                 		console.log('file not found in currentZip to remove-:'+fileName);
+					                 	}
+				                 	}
+								}
+								
+								var count1 = 0;
+								var tempZip = new JSZip();
+								for(var name in currentZip.files)
+								{
+									var fileName = ""+currentZip.files[name].name;
+									var fileData = currentZip.files[name].asBinary();
+									console.log(' Data is type  '+(fileData instanceof Blob) );
+									tempZip.file(""+fileName,fileData,{binary:true});
+									if(fileName != undefined && fileName.charAt(fileName.length - 1) != '/' && count1 < 1 && fileName != 'package.xml' && fileName != 'undefined') 
+				                 	{
+				                 		count1++;
+				                 	}
+								}
+								if(count1 > 0)
+								{
+									currentZip = tempZip;
+									var base64Str = ""+currentZip.generate({type:"base64",compression:"DEFLATE"});
+									console.log('again deploy remaining zip');
+									currentZip = new JSZip(base64Str, {base64:true});	
+									//deploy remaining currentZip
+									deploy(base64Str,currentType);
+								}
+								else
+								{
+									console.log('next deployment no item found in currentZip');
+									//dploy next item.
+									finalDeployment();
+								}
+							}
+							else
+							{
+								//dploy next item.
+								finalDeployment();
+							}
+						}
+						else
+						{
+							//dploy next item.
+							finalDeployment();
+						}
+					}
+					else if(status == 'EXCEPTION')
+					{
+						allDeployOperationComplete();
+					}
+				}
+				else
+				{
+					if(status == 'DONE SUCCESSFULLY')
+					{
+						console.log(currentType+' DONE SUCCESSFULLY');
+						//dploy next item.
+						startDeployment();
+					}
+					else if(status == 'DONE WITH VALIDATION ERROR')
+					{
+						console.log(currentType+'--DONE WITH VALIDATION ERROR');
+						if(errorItems != null && errorItems != undefined && errorItems != "package.xml")
+						{
+							var errorLi = errorItems.split(',');
+							console.log('errorLi-------:'+errorLi);
+							if(errorLi.length > 0)
+							{
+								for(var index in errorLi)
+								{
+									if(index < errorLi.length)
+									{
+										var fileName = errorLi [index];
+										if(currentZip.files[fileName] != undefined) 
+					                 	{
+					                 		finalZip.file(""+fileName, currentZip.files[fileName].asBinary(),{binary:true});
+					                 		currentZip.remove(fileName);
+					                 		if(currentZip.files[fileName+"-meta.xml"] != undefined)
+						  	 				{
+						  	 					finalZip.file(""+fileName+"-meta.xml", ""+currentZip.files[fileName+"-meta.xml"].asText());
+						  	 					currentZip.remove(fileName+"-meta.xml");
+						  	 				}
+						  	 				console.log('file removed from currentZip---:'+fileName);
+					                 	}
+					                 	else
+					                 	{
+					                 		console.log('file not found in currentZip to remove-:'+fileName);
+					                 	}
+				                 	}
+								}
+								var count1 = 0;
+								var tempZip = new JSZip();
+								for(var name in currentZip.files)
+								{
+									var fileName = ""+currentZip.files[name].name;
+									var fileData = currentZip.files[name].asBinary();
+									tempZip.file(""+fileName,fileData,{binary:true});
+									if(fileName != undefined && fileName.charAt(fileName.length - 1) != '/' && count1 < 1 && fileName != 'package.xml' && fileName != 'undefined') 
+				                 	{
+				                 		count1++;
+				                 	}
+								}
+	
+								if(count1 > 0)
+								{
+									currentZip = tempZip;
+									var base64Str = ""+currentZip.generate({type:"base64",compression:"DEFLATE"});
+									console.log('again deploy remaining zip');
+									
+									//deploy remaining currentZip
+									deploy(base64Str,currentType);
+								}
+								else
+								{
+									//dploy next item.
+									startDeployment();
+								}
+							}
+							else
+							{
+								//dploy next item.
+								startDeployment();
+							}
+						}
+						else
+						{
+							//dploy next item.
+							startDeployment();
+						}
+					}
+					else if(status == 'EXCEPTION')
+					{
+						allDeployOperationComplete();
+					}
+				}
+			}
+			catch(err) 
+			{
+				showMessage('Unknown error.');
+				allDeployOperationComplete();
+			}
+		}
+		
+		function startDeployment()
+		{
+			if(metaTypeList.length > 0)
+			{
+				var metaType = metaTypeList[0];
+				if(metaType != undefined && patchList[metaType] != undefined )
+				{
+					
+					var meLi = patchList[metaType];
+					if(meLi.length > 0)
+					{
+						var tempBase64Str = meLi[0];
+						currentZip = new JSZip(tempBase64Str, {base64:true});
+						console.log('deploying '+metaType+'...');
+						deploy(tempBase64Str,metaType);
+						
+						meLi.shift(0);
+						if(meLi.length == 0)
+						{
+							metaTypeList.shift(0);
+						}
+					}
+					else
+					{
+						metaTypeList.shift(0);
+						startDeployment();
+					}
+				}
+				else
+				{
+					metaTypeList.shift(0);
+					startDeployment();
+				}
+			}
+			else
+			{
+				//deploy error item from finalZip
+				var isEmpty = true;
+				for(var index in finalZip.files)
+				{
+					if(finalZip.files[index].name != undefined && finalZip.files[index].name.charAt(finalZip.files[index].name.length - 1) != '/' && isEmpty && finalZip.files[index].name.indexOf('-meta.xml', finalZip.files[index].name.length - 9) == -1) 
+                 	{
+                 		isEmpty = false;
+						break;
+                 	}
+				}
+				//deploy remining components
+				if(!isEmpty)
+				{
+					var metaType = 'Remaining Components';
+					
+					var tempZip = new JSZip();
+					for(var index in finalZip.files)
+					{	
+						var fileName = finalZip.files[index].name;
+						
+						if(fileName != undefined && fileName != 'undefined' && fileName.charAt(fileName.length - 1) != '/' && fileName.indexOf('-meta.xml', fileName.length - 9) == -1) 
+                 		{
+                 			var fileData = finalZip.files[index].asBinary();
+							if((JSON.stringify(tempZip).length + fileData.length) > limitofZip)
+                 			{
+                 				console.log('gerater than limitofZip----:'+JSON.stringify(tempZip).length + fileData.length);
+                 				isEmpty = true;
+                 				for(var ind in tempZip.files)
+								{
+									if(tempZip.files[ind].name != undefined && tempZip.files[ind].name != 'undefined' && tempZip.files[ind].name.charAt(tempZip.files[ind].name.length - 1) != '/' && isEmpty) 
+				                 	{
+				                 		isEmpty = false;
+										break;
+				                 	}
+								}
+								if(!isEmpty)
+								{							
+									if(tempZip.files[xmlname] == undefined)
+									{
+										console.log(' Data is type 2 '+(xmldata instanceof Blob) );
+										tempZip.file(xmlname,xmldata);
+									}
+									var tempData = ""+tempZip.generate({type:"base64",compression:"DEFLATE"})
+									console.log('before push length-:'+tempData.length);
+									finalPatchList.push(tempData);
+								}
+								tempZip = new JSZip();
+                 			}
+                 			
+                 			tempZip.file(""+fileName, fileData,{binary:true});
+							if(finalZip.files[fileName+"-meta.xml"] != undefined)
+							{
+								tempZip.file(""+finalZip.files[fileName+"-meta.xml"].name, ""+finalZip.files[fileName+"-meta.xml"].asText());
+							}
+						}
+					}
+					isEmpty = true;
+              		for(var ind in tempZip.files)
+					{
+						if(tempZip.files[ind].name != undefined && tempZip.files[ind].name != 'undefined' && tempZip.files[ind].name.charAt(tempZip.files[ind].name.length - 1) != '/' && isEmpty) 
+	                 	{
+	                 		isEmpty = false;
+							break;
+	                 	}
+					}
+					if(!isEmpty)
+					{							
+						if(tempZip.files[xmlname] == undefined)
+						{
+							console.log(' Data is type 3 '+(xmldata instanceof Blob) );
+							tempZip.file(xmlname, xmldata);
+						}
+						var tempData = ""+tempZip.generate({type:"base64",compression:"DEFLATE"})
+						console.log('before push length-:'+tempData.length);
+						finalPatchList.push(tempData);
+					}
+					if(finalPatchList.length > 0)
+					{
+						console.log('Remaining Components Deployment started.');
+						var base64Str = finalPatchList[0];
+						currentZip = new JSZip(base64Str, {base64:true});
+						deploy(base64Str,metaType);
+						finalPatchList.shift(0);
+					}
+					else
+					{
+						console.log('End of deployment');   
+						allDeployOperationComplete();
+					}
+				}
+				else
+				{
+					console.log('End of deployment');    
+					allDeployOperationComplete();
+				}
+			}
+		}
+	    
+	    // start collect items for patch
+ 		function collectItems(valid,isRepository)
+ 		{
+ 			console.log('valid--------:'+valid);
+ 			console.log('isRepository-:'+isRepository);
+ 			if(!valid)
+ 			{
+ 				console.log('validate failed.');
+	 			enableBoth();
+ 			}
+ 			else
+ 			{
+	 			attIds = [];
+	 			attachmentMap = {};
+	 			metaItems = [];
+	 			metaTypeList = [];
+	 			patchList = {};
+	 			if(patchId != undefined && patchId != '')
+	 			{
+	 				if(isRepository)
+	 				{
+	 					Visualforce.remoting.Manager.invokeAction(
+						            '{!$RemoteAction.ComponentPatchDeployController.getComponentItems}',
+						            patchId,
+						            handleMetaItems   
+						        );
+	 				}
+	 				else
+	 				{
+		 				Visualforce.remoting.Manager.invokeAction(
+						            '{!$RemoteAction.ComponentPatchDeployController.getMetaItems}',
+						            patchId,
+						            handleMetaItems   
+						        );
+					}	        
+	 			}
+	 		}
+ 		}
+
+ 		function handleMetaItems(r,e)
+		{
+			if(e.status) 
+			{
+				if(r.length > 0)
+				{
+					metaItems = r;
+					totalSnap =  r.length-1;
+					var attachmentIds = {};			
+					for(var index in r)
+					{
+						
+						if(index < r.length)
+						{
+							var typeWithItem = r[index];
+							var typeItemMap = [];
+							typeItemMap = typeWithItem.items;
+							for(var i in typeItemMap)
+							{
+								if(i < typeItemMap.length)
+								{
+									var itemsAttIds = typeItemMap[i].attachmentIds;
+									for(var j in itemsAttIds)
+									{
+										if(j < itemsAttIds.length)
+										{
+											if(attachmentIds[itemsAttIds[j]] == undefined)
+											{
+												attachmentIds[itemsAttIds[j]] = itemsAttIds[j];
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+					
+					for(var id in attachmentIds)
+					{
+						attIds.push(attachmentIds[id]);
+					}
+					console.log('total att--:'+attIds.length);
+					if(attIds.length > 0)
+					{
+						for(var index in attIds)
+						{
+							if(index < 5 && index < attIds.length)
+							{
+								if(attIds.length > 5)
+								{
+									var tempId = ""+attIds[index];
+									getSourceAttachments(tempId,index,4);
+								}
+								else
+								{
+									var tempId = ""+attIds[index];
+									getSourceAttachments(tempId,index,(attIds.length -1));
+								}
+								
+							}		
+						}
+					}
+					else
+					{
+						showMessage('Metadata defination not found.');
+						enableBoth();
+					}
+				}
+				else
+				{
+					showMessage('No item found in patch.');
+					enableBoth();
+				}
+			}
+			else
+			{
+				showMessage(e.message);
+				enableBoth();
+			}
+			
+		}
+		
+		// get attachments
+		function getSourceAttachments(aId,index,total) 
+		{
+		    Visualforce.remoting.Manager.invokeAction(
+		        '{!$RemoteAction.ComponentPatchDeployController.getComponentsZip}',
+		        aId,
+		        index,
+		        total,
+		        handleSourceAttachments
+		    );
+		}
+ 		
+ 		function handleSourceAttachments(r,e) 
+		{
+		    if(e.status && r) 
+		    {
+		    	attIds.remove(r.Id);
+		    	if(r.basedata != null && r.Id != null)
+		    	{
+		    		attachmentMap[r.Id] = ""+r.basedata;
+		    	}
+		    	if(r.index == r.total)
+		    	{
+		    		console.log('remaining attIds--:'+attIds.length);
+		    		if(attIds.length > 0)
+			    	{
+			    		for(var index in attIds)
+						{
+							if(index < 5 && index < attIds.length)
+							{
+								if(attIds.length > 5)
+								{
+									var tempId = ""+attIds[index];
+									getSourceAttachments(tempId,index,4);
+								}
+								else
+								{
+									var tempId = ""+attIds[index];
+									getSourceAttachments(tempId,index,(attIds.length -1));
+								}
+								
+							}		
+						}
+			    	}
+			    	else
+			    	{
+		    			console.log('all attachment collected');
+			    		patchZipCreator();
+		    		}
+		    	}
+		    }
+		    else
+		    {
+		    	showMessage(e.message);
+		    	enableBoth();
+		    }
+		}
+		
+		var fileDataTest;
+		
+		function b64toBlob(b64Data, contentType, sliceSize) {
+		    contentType = contentType || '';
+		    sliceSize = sliceSize || 512;
+		
+		    var byteCharacters = atob(b64Data);
+		    var byteArrays = [];
+		
+		    for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+		        var slice = byteCharacters.slice(offset, offset + sliceSize);
+		
+		        var byteNumbers = new Array(slice.length);
+		        for (var i = 0; i < slice.length; i++) {
+		            byteNumbers[i] = slice.charCodeAt(i);
+		        }
+		
+		        var byteArray = new Uint8Array(byteNumbers);
+		
+		        byteArrays.push(byteArray);
+		    }
+		
+		    var blob = new Blob(byteArrays, {type: contentType});
+		    return blob;
+		}
+		// create zip files of patch
+		function patchZipCreator()
+		{
+			try
+			{
+				attSaveIndex = 0;
+				var zip = new JSZip();
+				var objPartXmlMap = {};
+				var ruleXmlMap = {};
+				var packageXmlHeader = '<?xml version="1.0" encoding="UTF-8"?><Package xmlns="http://soap.sforce.com/2006/04/metadata">';
+				var packageXmlData = '<types><members>*</members><name>WorkflowRule</name></types><types><members>*</members><name>AccountOwnerSharingRule</name></types><types><members>*</members><name>SamlSsoConfig</name></types><types><members>*</members><name>WorkflowFlowAction</name></types><types><members>*</members><name>CustomLabel</name></types><types><members>*</members><name>CaseCriteriaBasedSharingRule</name></types><types><members>*</members><name>SharingRules</name></types><types><members>*</members><name>Portal</name></types><types><members>*</members><name>Skill</name></types><types><members>*</members><name>Territory</name></types><types><members>*</members><name>CustomObjectCriteriaBasedSharingRule</name></types><types><members>*</members><name>Group</name></types><types><members>*</members><name>CaseSharingRules</name></types><types><members>*</members><name>WorkflowAlert</name></types><types><members>*</members><name>OpportunityOwnerSharingRule</name></types><types><members>*</members><name>ContactOwnerSharingRule</name></types><types><members>*</members><name>ExternalDataSource</name></types><types><members>*</members><name>XOrgHub</name></types><types><members>*</members><name>EntitlementProcess</name></types><types><members>*</members><name>Scontrol</name></types><types><members>*</members><name>DataCategoryGroup</name></types><types><members>*</members><name>ContactCriteriaBasedSharingRule</name></types><types><members>*</members><name>AuraDefinitionBundle</name></types><types><members>*</members><name>Profile</name></types><types><members>*</members><name>ConnectedApp</name></types><types><members>*</members><name>ApexPage</name></types><types><members>*</members><name>LiveChatDeployment</name></types><types><members>*</members><name>Layout</name></types><types><members>*</members><name>CustomPermission</name></types><types><members>*</members><name>SiteDotCom</name></types><types><members>*</members><name>UiPlugin</name></types><types><members>*</members><name>HomePageLayout</name></types><types><members>*</members><name>OpportunitySharingRules</name></types><types><members>*</members><name>UserSharingRules</name></types><types><members>*</members><name>Dashboard</name></types><types><members>*</members><name>AssignmentRules</name></types><types><members>*</members><name>EmailFolder</name></types><types><members>*</members><name>Territory2Rule</name></types><types><members>*</members><name>CustomObjectOwnerSharingRule</name></types><types><members>*</members><name>AnalyticSnapshot</name></types><types><members>*</members><name>VisualizationPlugin</name></types><types><members>*</members><name>CustomSite</name></types><types><members>*</members><name>EscalationRule</name></types><types><members>*</members><name>CaseOwnerSharingRule</name></types><types><members>*</members><name>QuickAction</name></types><types><members>*</members><name>ReportType</name></types><types><members>*</members><name>CustomPageWebLink</name></types><types><members>*</members><name>ApexComponent</name></types><types><members>*</members><name>BaseSharingRule</name></types><types><members>*</members><name>WorkflowKnowledgePublish</name></types><types><members>*</members><name>EntitlementTemplate</name></types><types><members>*</members><name>FlexiPage</name></types><types><members>*</members><name>Workflow</name></types><types><members>*</members><name>Settings</name></types><types><members>*</members><name>ArticleType</name></types><types><members>*</members><name>DashboardFolder</name></types><types><members>*</members><name>Translations</name></types><types><members>*</members><name>ApexTrigger</name></types><types><members>*</members><name>Role</name></types><types><members>*</members><name>CustomObjectSharingRules</name></types><types><members>*</members><name>CallCenter</name></types><types><members>*</members><name>RemoteSiteSetting</name></types><types><members>*</members><name>WorkflowSend</name></types><types><members>*</members><name>XOrgHubSharedObject</name></types><types><members>*</members><name>Territory2Type</name></types><types><members>*</members><name>LeadCriteriaBasedSharingRule</name></types><types><members>*</members><name>SharingRecalculation</name></types><types><members>*</members><name>SynonymDictionary</name></types><types><members>*</members><name>WorkflowOutboundMessage</name></types><types><members>*</members><name>PostTemplate</name></types><types><members>*</members><name>OwnerSharingRule</name></types><types><members>*</members><name>WorkflowFieldUpdate</name></types><types><members>*</members><name>OpportunityCriteriaBasedSharingRule</name></types><types><members>*</members><name>CustomTab</name></types><types><members>*</members><name>Letterhead</name></types><types><members>*</members><name>InstalledPackage</name></types><types><members>*</members><name>AuthProvider</name></types><types><members>*</members><name>LeadSharingRules</name></types><types><members>*</members><name>Queue</name></types><types><members>*</members><name>CampaignOwnerSharingRule</name></types><types><members>*</members><name>CriteriaBasedSharingRule</name></types><types><members>*</members><name>DocumentFolder</name></types><types><members>*</members><name>PermissonSet</name></types><types><members>*</members><name>WorkflowTask</name></types><types><members>*</members><name>LeadOwnerSharingRule</name></types><types><members>*</members><name>StaticResource</name></types><types><members>*</members><name>CorsWhitelistOrigin</name></types><types><members>*</members><name>EmailTemplate</name></types><types><members>*</members><name>SharingReason</name></types><types><members>*</members><name>LiveChatButton</name></types><types><members>*</members><name>Network</name></types><types><members>*</members><name>ApprovalProcess</name></types><types><members>*</members><name>MilestoneType</name></types><types><members>*</members><name>AssignmentRule</name></types><types><members>*</members><name>LiveChatAgentConfig</name></types><types><members>*</members><name>UserMembershipSharingRule</name></types><types><members>*</members><name>BusinessProcess</name></types><types><members>*</members><name>AutoResponseRule</name></types><types><members>*</members><name>Flow</name></types><types><members>*</members><name>ManagedTopics</name></types><types><members>*</members><name>Report</name></types><types><members>*</members><name>AppMenu</name></types><types><members>*</members><name>CustomObjectTranslation</name></types><types><members>*</members><name>CustomApplication</name></types><types><members>*</members><name>ContactSharingRules</name></types><types><members>*</members><name>ApexClass</name></types><types><members>*</members><name>CampaignSharingRules</name></types><types><members>*</members><name>Territory2</name></types><types><members>*</members><name>Community</name></types><types><members>*</members><name>EmailTemplateFolder</name></types><types><members>*</members><name>Document</name></types><types><members>*</members><name>AutoResponseRules</name></types><types><members>*</members><name>Territory2Model</name></types><types><members>*</members><name>ReportFolder</name></types><types><members>*</members><name>CustomApplicationComponent</name></types><types><members>*</members><name>CampaignCriteriaBasedSharingRule</name></types><types><members>*</members><name>AccountCriteriaBasedSharingRule</name></types><types><members>*</members><name>SharingSet</name></types><types><members>*</members><name>UserCriteriaBasedSharingRule</name></types><types><members>*</members><name>HomePageComponent</name></types><types><members>*</members><name>AccountSharingRules</name></types><types><members>*</members><name>WorkflowTask</name></types><types><members>*</members><name>WorkflowOutboundMessage</name></types><types><members>*</members><name>WorkflowFieldUpdate</name></types><types><members>*</members><name>WorkflowAlert</name></types>';
+				var packageXmlFooter = '<version>29.0</version></Package>';
+				for(var index in metaItems)
+				{
+					if(index < metaItems.length)
+					{
+						var typeWithItem = metaItems[index];
+						var typeItemMap = typeWithItem.items;
+						var metaType = ""+typeWithItem.metaType;
+						
+						if(mmap[metaType] != true)
+						{
+							if(metaType =='CustomObject')
+							{
+								packageXmlData += '<types>';
+							}
+							
+							for(var i in typeItemMap)
+							{
+								if(i < typeItemMap.length)
+								{
+									var fileName = ""+typeItemMap[i].fileName;
+									var itemName = ""+typeItemMap[i].itemName;
+									/*if(metaType == 'DocumentFolder' || metaType == 'DashboardFolder' || metaType == 'ReportFolder' || metaType == 'EmailFolder')
+									{
+										fileName = fileName +'-meta.xml';
+									}*/
+									if(metaType =='CustomObject')
+									{
+										packageXmlData += '<members>'+itemName+'</members>';
+									}
+									if(metaType == 'Workflow')
+							        {
+							        	if(fileName.indexOf('Workflow/') == 0)
+							        	{
+							            	fileName = fileName.replace('Workflow/','workflows/');
+							        	}
+							        }
+									var attachmentIds = typeItemMap[i].attachmentIds;
+									var found = false;
+									for(var j in attachmentIds)
+									{
+										if(j < attachmentIds.length)
+										{
+											if(attachmentMap[attachmentIds[j]] != undefined)
+											{
+												try
+												{
+													var zipstr = new JSZip(atob(attachmentMap[attachmentIds[j]]), {type :'blob'});
+													if(metaType == 'StaticResource')
+														fileDataTest = 	zipstr;
+													//var zipstr = new JSZip(""+attachmentMap[attachmentIds[j]], {blob:true});
+								                	if(zipstr != undefined && zipstr.files[fileName] != undefined) 
+								                 	{
+								                 		found = true;
+								                 		var fileData = zipstr.file(fileName).asBinary();
+								                 		//console.log(' Data is type 6 '+(fileData instanceof Blob) + ' -- '+ typeof(fileData)+ '   '+fileData);
+								                 		if((JSON.stringify(zip).length+JSON.stringify(fileData).length) > limitofZip)
+								                 		{
+								                 			console.log('greater than limitofZip');
+								                 			var isEmpty = true;
+								                 			
+															for(var index in zip.files)
+															{
+																if(zip.files[index].name != undefined && zip.files[index].name != 'undefined' && zip.files[index].name.charAt(zip.files[index].name.length - 1) != '/' && isEmpty) 
+											                 	{
+											                 		isEmpty = false;
+																	break;
+											                 	}
+															}
+															if(!isEmpty)
+															{
+																var li = [];
+																if(patchList['Patch'] != undefined)
+																{
+																	li = patchList['Patch'];
+																}
+																if(metaType =='CustomObject')
+																	zip.file(xmlname, packageXmlHeader+''+packageXmlData+''+'<name>'+metaType+'</name></types>'+packageXmlFooter);
+																else
+																	zip.file(xmlname, packageXmlHeader+''+packageXmlData+''+packageXmlFooter);
+																tempbase64str = zip.generate({type:"base64",compression:"DEFLATE"});
+																li.push(tempbase64str);
+																patchList['Patch'] = li;
+																console.log('push length--'+tempbase64str.length);
+								                 			}
+								                 			zip = new JSZip();
+								                 			//zip.file(""+zipstr.files[fileName].name, ""+zipstr.files[fileName].data);
+								                 			if(zipstr.files[fileName+"-meta.xml"] != undefined)
+										  	 				{
+										  	 					zip.file(""+zipstr.files[fileName+"-meta.xml"].name,""+zipstr.files[fileName+"-meta.xml"].asText());
+										  	 				}
+								                 		}
+								                 		else
+								                 		{
+								                 			if(zipstr.files[fileName+"-meta.xml"] != undefined)
+										  	 				{
+								                 				zip.file(""+fileName+"-meta.xml",""+zipstr.files[fileName+"-meta.xml"].asText());
+								                 			}
+								                 		}
+								                 		zip.file(""+fileName, fileData, {binary:true});
+								                    	break;
+								                	}
+							                	}
+							                	catch(err)
+							                	{
+							                		console.log('exception--:'+err.message); 
+							                		console.log('attachment Id--:'+attachmentIds[j]);
+							                	}
+							                }
+										}
+									}
+									if(!found)
+									{
+										console.log('Item Not Found-----------itemName:'+itemName+'--------------fileName:'+fileName);
+									}
+								}
+							}
+							if(metaType =='CustomObject')
+							{
+								packageXmlData += '<name>'+metaType+'</name></types>';
+							}
+						}
+						else if(mmap[metaType])
+						{
+							if(metaType == 'CustomLabel')
+							{
+								console.log('in CustomLabel');
+								
+								var metaSnapMap = {};
+								var attSnapMap = {};
+								
+								for(var i in typeItemMap)
+								{
+									if(i < typeItemMap.length)
+									{
+										var fileName = typeItemMap[i].fileName;
+										var itemName = typeItemMap[i].itemName;
+										var snapId = typeItemMap[i].snapId;
+										var attachmentIds = typeItemMap[i].attachmentIds;
+										if(attSnapMap[snapId] == undefined)
+										{
+											attSnapMap[snapId] = attachmentIds;
+										}
+										var li = [];
+										if(metaSnapMap[snapId] != undefined)
+										{
+											li = metaSnapMap[snapId];
+										}
+										var item = new Object();
+										item.fileName = fileName;
+										item.itemName = itemName;
+										li.push(item);
+										metaSnapMap[snapId] = li;
+									}
+								}
+								var base64Li = [];
+								var labelHeader = '<?xml version="1.0" encoding="UTF-8"?><CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">';
+		               			var labelFooter = '</CustomLabels>';
+		               			var allLabels = ''+labelHeader;
+		               			var allLabelList = [];
+								for(var i in attSnapMap)
+								{
+									var attLi = attSnapMap[i];
+									var xmlList = [];
+									if(attLi != undefined)
+									{
+										for(var j in attLi)
+										{
+											if(j < attLi.length)
+											{
+												if(attachmentMap[attLi[j]] != undefined)
+												{
+													var zipstr = new JSZip(attachmentMap[attLi[j]], {base64:true});
+													
+								                	if(zipstr != undefined && zipstr.files['labels/CustomLabels.labels'] != undefined) 
+								                 	{
+								                 		xmlList.push(""+zipstr.files['labels/CustomLabels.labels'].asText());
+								                 	}
+												}
+											}
+										}
+									}
+									var metItemLi = metaSnapMap[i];
+									if(metItemLi != undefined)
+									{	
+										var li = [];
+		               					li = getPatchXml(xmlList,metItemLi);
+		               					for(var k in li)
+		               					{
+		               						if(k < li.length)
+		               						{
+		               							if((allLabels+''+li[k]).length > limitofZip)	
+		               							{	
+		               								allLabelList.push(allLabels);
+		               								allLabels = ''+labelHeader;
+		               							}
+		               							allLabels += li[k];
+		               						}
+		               					}
+	               					}
+								}
+								allLabels +=labelFooter;
+								allLabelList.push(allLabels);
+								for(var one in allLabelList)
+								{
+									if(one < allLabelList.length)
+									{
+										if(one > 0)
+				                 		{
+				                 			var isEmpty = true;
+											for(var index in zip.files)
+											{
+												if(zip.files[index].name != undefined && zip.files[index].name != 'undefined' && zip.files[index].name.charAt(zip.files[index].name.length - 1) != '/' && isEmpty) 
+							                 	{
+							                 		isEmpty = false;
+													break;
+							                 	}
+											}
+											if(!isEmpty)
+											{
+												var li = [];
+												if(patchList['Patch'] != undefined)
+												{
+													li = patchList['Patch'];
+												}
+												zip.file(xmlname, packageXmlHeader+''+packageXmlData+''+packageXmlFooter);
+												li.push(zip.generate({type:"base64",compression:"DEFLATE"}));
+												patchList['Patch'] = li;
+											}
+				                 			zip = new JSZip();
+				                 		}
+										
+										if(JSON.stringify(zip).length > limitofZip)
+				                 		{
+				                 			console.log('greater than limitofZip');
+
+				                 			var isEmpty = true;
+											for(var index in zip.files)
+											{
+												if(zip.files[index].name != undefined && zip.files[index].name != 'undefined' && zip.files[index].name.charAt(zip.files[index].name.length - 1) != '/' && isEmpty) 
+							                 	{
+							                 		isEmpty = false;
+													break;
+							                 	}
+											}
+											if(!isEmpty)
+											{
+												var li = [];
+												if(patchList['Patch'] != undefined)
+												{
+													li = patchList['Patch'];
+												}
+												
+												zip.file(xmlname, packageXmlHeader+''+packageXmlData+''+packageXmlFooter);
+												li.push(zip.generate({type:"base64",compression:"DEFLATE"}));
+												patchList['Patch'] = li;
+					                 			//console.log('added to patchList');
+				                 			}
+				                 			zip = new JSZip();
+				                 		}
+				                 		zip.file("labels/CustomLabels.labels", ""+allLabelList[one]);
+									}
+								}
+							}
+							else
+							{
+								if(metaType != 'AssignmentRule' && metaType != 'AutoResponseRule' && metaType != 'WorkflowAlert' && metaType != 'WorkflowFieldUpdate' && metaType != 'WorkflowOutboundMessage' && metaType != 'WorkflowTask' && metaType != 'WorkflowRule')
+									packageXmlData += '<types>'
+								//types which part of object
+								var metaSnapMap = {};
+								var attSnapMap = {};
+								
+								for(var i in typeItemMap)
+								{
+									if(i < typeItemMap.length)
+									{
+										var fileName = typeItemMap[i].fileName;
+										var itemName = typeItemMap[i].itemName;
+										if(metaType != 'AssignmentRule' && metaType != 'AutoResponseRule' && metaType != 'WorkflowAlert' && metaType != 'WorkflowFieldUpdate' && metaType != 'WorkflowOutboundMessage' && metaType != 'WorkflowTask' && metaType != 'WorkflowRule')
+											packageXmlData += '<members>'+itemName+'</members>';
+										var snapId = typeItemMap[i].snapId;
+										var attachmentIds = typeItemMap[i].attachmentIds;
+										if(attSnapMap[snapId] == undefined)
+										{
+											attSnapMap[snapId] = attachmentIds;
+										}
+										var li = [];
+										if(metaSnapMap[snapId] != undefined)
+										{
+											li = metaSnapMap[snapId];
+										}
+										var item = new Object();
+										item.fileName = fileName;
+										item.itemName = itemName;
+										li.push(item);
+										metaSnapMap[snapId] = li;
+									}
+								}
+								for(snap in metaSnapMap)
+								{
+									if(attSnapMap[snap] != undefined)
+									{	
+										var items = metaSnapMap[snap];
+										var atts = attSnapMap[snap];
+										for(var item in items)
+										{
+											if(item < items.length)
+											{
+												var fileName = items[item].fileName;
+												var itemName = items[item].itemName;
+												var res = itemName.split(".");
+												itemName = res[res.length - 1];
+												
+												var xmlList = [];
+												for(var id in atts)
+												{
+													if(id < atts.length)
+													{
+														var zipstr = new JSZip(attachmentMap[atts[id]], {base64:true});
+														if(zipstr.files[fileName] != undefined)
+														{
+															xmlList.push(""+zipstr.files[fileName].asText());
+														}
+													}
+												}
+												// get file if allready have object file.
+												var customXmlData = null;
+												var li = patchList['Patch'];
+												var isFound = false;
+												var foundIndex;
+												var tempZip;
+												if(zip.files[fileName] == undefined)
+												{
+													for(var n in li)
+													{
+														if(n < li.length)
+														{
+															var tempZip = new JSZip(li[n],{base64:true});
+															if(tempZip.files[fileName] != undefined)
+															{
+																customXmlData = ""+tempZip.files[fileName].asText();
+																isFound = true;
+																foundIndex = n;
+																console.log('file found');
+																break;
+															}
+														}
+													}
+												}
+												else
+												{
+													customXmlData = ""+zip.files[fileName].asText();
+													console.log('file found');
+												}
+												customXmlData = getObjectPartXml(xmlList,fileName,itemName,customXmlData,metaType);
+												
+												if(isFound && foundIndex != undefined && foundIndex < li.length)
+												{
+													var base64str = li[foundIndex];
+													var tempZip = new JSZip(base64str,{base64:true});
+													tempZip.file(fileName,customXmlData);
+													li[foundIndex] = tempZip.generate({type:"base64",compression:"DEFLATE"});
+													patchList['Patch'] = li;
+													//console.log('zip updated');
+												}
+												else
+												{
+													if(zip.files[fileName] != undefined)
+													{
+														zip.remove(fileName);
+													}
+									           		if((JSON.stringify(zip).length+ JSON.stringify(customXmlData).length)> limitofZip)
+									           		{
+									           			console.log('greater than limitofZip');
+									           			var isEmpty = true;
+														for(var index in zip.files)
+														{
+															if(zip.files[index].name != undefined && zip.files[index].name != 'undefined' && zip.files[index].name.charAt(zip.files[index].name.length - 1) != '/' && isEmpty) 
+										                 	{
+										                 		isEmpty = false;
+																break;
+										                 	}
+														}
+														if(!isEmpty)
+														{
+															var li = [];
+															if(patchList['Patch'] != undefined)
+															{
+																li = patchList['Patch'];
+															}
+															if(metaType != 'AssignmentRule' && metaType != 'AutoResponseRule' && metaType != 'WorkflowAlert' && metaType != 'WorkflowFieldUpdate' && metaType != 'WorkflowOutboundMessage' && metaType != 'WorkflowTask' && metaType != 'WorkflowRule')
+																zip.file(xmlname, packageXmlHeader+''+packageXmlData +'<name>'+metaType+'</name></types>'+packageXmlFooter);
+															else
+																zip.file(xmlname, packageXmlHeader+''+packageXmlData+''+packageXmlFooter);
+															li.push(zip.generate({type:"base64",compression:"DEFLATE"}));
+															patchList['Patch'] = li;
+									           			}
+									           			zip = new JSZip();
+									           		}
+									           		//console.log(' Data is type 5 '+(customXmlData instanceof Blob) + ' -- '+ typeof(customXmlData)+ '   '+customXmlData);
+									           		zip.file(fileName, customXmlData);
+												}
+											}
+										}								
+									}
+								}	
+								if(metaType != 'AssignmentRule' && metaType != 'AutoResponseRule' && metaType != 'WorkflowAlert' && metaType != 'WorkflowFieldUpdate' && metaType != 'WorkflowOutboundMessage' && metaType != 'WorkflowTask' && metaType != 'WorkflowRule')
+									packageXmlData += '<name>'+metaType+'</name></types>';
+							}
+						}
+					}
+				}
+				xmldata = packageXmlHeader+''+packageXmlData+''+packageXmlFooter;
+				var isEmpty = true;
+				//console.log(zip.files);
+				for(var index in zip.files)
+				{
+					if(zip.files[index].name != undefined && zip.files[index].name != 'undefined' && zip.files[index].name.charAt(zip.files[index].name.length - 1) != '/' && isEmpty) 
+	               	{
+	               		isEmpty = false;
+						break;
+	               	}
+				}
+				if(!isEmpty)
+				{
+					var li = [];
+					if(patchList['Patch'] != undefined)
+					{
+						li = patchList['Patch'];
+					}
+					//console.log(' Data is type 4 '+(xmldata instanceof Blob) + ' -- '+ typeof(xmldata)+ '   '+xmldata);
+					zip.file(xmlname, xmldata);
+					var tempData = ""+zip.generate({type:"base64",compression:"DEFLATE"});
+					console.log('before push length-:'+tempData.length);
+					
+					li.push(tempData);
+					patchList['Patch'] = li;
+				}
+				console.log('after insert package.xml');
+				if(patchList['Patch'] != undefined)
+				{
+					metaTypeList.push('Patch');
+					console.log('Patch Creation Complete');
+					//startDeployment();
+					checkAttachmentStatus();
+				}
+				else
+				{
+					console.log('no zip found ');
+					showMessage('No metadata item found.');
+					enableBoth();
+				}
+			}
+			catch(err) 
+			{
+				showMessage('Unknown error.');
+				console.log(err);
+				console.log(err.message);
+				allDeployOperationComplete();
+			}
+		}
+ 		
+ 		$(window).bind("beforeunload",function(event) {
+	        return 'Deployment may be in progress.';
+    	});
+    	
+    	
+    	
+    	function disableBoth()
+		{
+			var toDisableItems = document.getElementsByClassName('disableitem');
+			for (var i = 0; i < toDisableItems.length; i++) 
+			{
+				if(toDisableItems[i].type == 'button' || toDisableItems[i].type == 'select-one')
+				{
+					toDisableItems[i].disabled = true;
+				}
+			}
+		}
+		
+		function enableBoth()
+		{
+			var toDisableItems = document.getElementsByClassName('disableitem');
+			for (var i = 0; i < toDisableItems.length; i++) 
+			{
+				if(toDisableItems[i].type == 'button' || toDisableItems[i].type == 'select-one')
+				{
+					toDisableItems[i].disabled = false;
+				}
+			}
+		}
+		
+		function getObjectPartXml(xmlList,fileName,itemName,tempXml,metaType)
+    	{
+    		var x2js = new X2JS();
+			var tgtmap = {};
+			for(var index = 0; index < xmlList.length; index++)
+			{
+				var xml = xmlList[index];
+				
+				var srcjson = x2js.xml_str2json(xmlList[index]);
+				if(srcjson != null)
+				{
+					var srcitems;
+					if(metaType == 'CustomField')
+					{
+						var srcMetaItem = srcjson.CustomObject;
+						srcitems = srcMetaItem.fields;
+					}
+					else if(metaType == 'ListView')
+					{
+						var srcMetaItem = srcjson.CustomObject;
+						srcitems = srcMetaItem.listViews;
+					}
+					else if(metaType == 'CompactLayout')
+					{
+						var srcMetaItem = srcjson.CustomObject;
+						srcitems = srcMetaItem.compactLayouts;
+					}
+					else if(metaType == 'WebLink')
+					{
+						var srcMetaItem = srcjson.CustomObject;
+						srcitems = srcMetaItem.webLinks;
+					}
+					else if(metaType == 'RecordType')
+					{
+						var srcMetaItem = srcjson.CustomObject;
+						srcitems = srcMetaItem.recordTypes;
+					}
+					else if(metaType == 'FieldSet')
+					{
+						var srcMetaItem = srcjson.CustomObject;
+						srcitems = srcMetaItem.fieldSets;
+					}
+					else if(metaType == 'ValidationRule')
+					{
+						var srcMetaItem = srcjson.CustomObject;
+						srcitems = srcMetaItem.validationRules;
+					}
+					else if(metaType == 'AssignmentRule')
+					{
+						var srcMetaItem = srcjson.AssignmentRules;
+						srcitems = srcMetaItem.assignmentRule;
+					}
+					else if(metaType == 'AutoResponseRule')
+					{
+						var srcMetaItem = srcjson.AutoResponseRules;
+						srcitems = srcMetaItem.autoResponseRule;
+					}
+					else if(metaType == 'WorkflowTask')
+					{
+						var srcMetaItem = srcjson.Workflow;
+						srcitems = srcMetaItem.tasks;
+					}
+					else if(metaType == 'WorkflowOutboundMessage')
+					{
+						var srcMetaItem = srcjson.Workflow;
+						srcitems = srcMetaItem.outboundMessages;
+					}
+					else if(metaType == 'WorkflowFieldUpdate')
+					{
+						var srcMetaItem = srcjson.Workflow;
+						srcitems = srcMetaItem.fieldUpdates;
+					}
+					else if(metaType == 'WorkflowAlert')
+					{
+						var srcMetaItem = srcjson.Workflow;
+						srcitems = srcMetaItem.alerts;
+					}
+					if( metaType == 'WorkflowRule')
+					{
+						var srcMetaItem = srcjson.Workflow;
+						srcitems = srcMetaItem.rules;
+					}
+					if(srcitems != undefined)
+					{
+						if(srcitems.fullName == undefined)
+					    {			    	
+					    	$.each(srcitems, function( i, v )
+						    {
+						    	tgtmap[v.fullName] = JSON.stringify(v);
+						    });  
+					    }
+					    else
+					    {
+						    tgtmap[srcitems.fullName] = JSON.stringify(srcitems);
+					    }
+				    }
+				}
+			}
+			if(tgtmap[itemName] != undefined)
+			{
+				if(tempXml == null)
+				{
+					//header
+					if(metaType == 'AssignmentRule' )
+					{
+						tempXml = '<?xml version="1.0" encoding="UTF-8"?><AssignmentRules xmlns="http://soap.sforce.com/2006/04/metadata">';
+					}
+					else if(metaType == 'AutoResponseRule')
+					{
+						tempXml = '<?xml version="1.0" encoding="UTF-8"?><AutoResponseRules xmlns="http://soap.sforce.com/2006/04/metadata">';
+					}
+					else if(metaType == 'WorkflowAlert' || metaType == 'WorkflowFieldUpdate'|| metaType == 'WorkflowOutboundMessage'|| metaType == 'WorkflowTask' || metaType == 'WorkflowRule')
+					{
+						tempXml = '<?xml version="1.0" encoding="UTF-8"?><Workflow xmlns="http://soap.sforce.com/2006/04/metadata">';
+					}
+					else
+					{
+						tempXml = '<?xml version="1.0" encoding="UTF-8"?><CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">';
+					}
+					//body
+					if(metaType == 'CustomField')
+					{
+						tempXml = tempXml +'<fields>'+x2js.json2xml_str($.parseJSON(tgtmap[itemName]))+'</fields>';
+					}
+					else if(metaType == 'ListView')
+					{
+						tempXml = tempXml +'<listViews>'+x2js.json2xml_str($.parseJSON(tgtmap[itemName]))+'</listViews>';
+					}
+					else if(metaType == 'CompactLayout')
+					{
+						tempXml = tempXml +'<compactLayouts>'+x2js.json2xml_str($.parseJSON(tgtmap[itemName]))+'</compactLayouts>';
+					}
+					else if(metaType == 'WebLink')
+					{
+						tempXml = tempXml +'<webLinks>'+x2js.json2xml_str($.parseJSON(tgtmap[itemName]))+'</webLinks>';
+					}
+					else if(metaType == 'RecordType')
+					{
+						tempXml = tempXml +'<recordTypes>'+x2js.json2xml_str($.parseJSON(tgtmap[itemName]))+'</recordTypes>';
+					}
+					else if(metaType == 'FieldSet')
+					{
+						tempXml = tempXml +'<fieldSets>'+x2js.json2xml_str($.parseJSON(tgtmap[itemName]))+'</fieldSets>';
+					}
+					else if(metaType == 'ValidationRule')
+					{
+						tempXml = tempXml +'<validationRules>'+x2js.json2xml_str($.parseJSON(tgtmap[itemName]))+'</validationRules>';
+					}
+					else if(metaType == 'AssignmentRule')
+					{
+						tempXml = tempXml +'<assignmentRule>'+x2js.json2xml_str($.parseJSON(tgtmap[itemName]))+'</assignmentRule>';
+					}
+					else if(metaType == 'AutoResponseRule')
+					{
+						tempXml = tempXml +'<autoResponseRule>'+x2js.json2xml_str($.parseJSON(tgtmap[itemName]))+'</autoResponseRule>';
+					}
+					else if(metaType == 'WorkflowAlert')
+					{
+						tempXml = tempXml +'<alerts>'+x2js.json2xml_str($.parseJSON(tgtmap[itemName]))+'</alerts>';
+					}
+					else if(metaType == 'WorkflowFieldUpdate')
+					{
+						tempXml = tempXml +'<fieldUpdates>'+x2js.json2xml_str($.parseJSON(tgtmap[itemName]))+'</fieldUpdates>';
+					}
+					else if(metaType == 'WorkflowOutboundMessage')
+					{
+						tempXml = tempXml +'<outboundMessages>'+x2js.json2xml_str($.parseJSON(tgtmap[itemName]))+'</outboundMessages>';
+					}
+					else if(metaType == 'WorkflowTask')
+					{
+						tempXml = tempXml +'<tasks>'+x2js.json2xml_str($.parseJSON(tgtmap[itemName]))+'</tasks>';
+					}
+					else if(metaType == 'WorkflowRule')
+					{
+						tempXml = tempXml +'<rules>'+x2js.json2xml_str($.parseJSON(tgtmap[itemName]))+'</rules>';
+					}
+					
+					//footer
+					if(metaType == 'AssignmentRule' )
+					{
+						tempXml = tempXml +'</AssignmentRules>';
+					}
+					else if(metaType == 'AutoResponseRule')
+					{
+						tempXml = tempXml +'</AutoResponseRules>';
+					}
+					else if(metaType == 'WorkflowAlert' || metaType == 'WorkflowFieldUpdate'|| metaType == 'WorkflowOutboundMessage'|| metaType == 'WorkflowTask' || metaType == 'WorkflowRule')
+					{
+						tempXml = tempXml +'</Workflow>';
+					}
+					else
+					{
+						tempXml = tempXml +'</CustomObject>';
+					}
+				}
+				else
+				{
+					tempJsn = x2js.xml_str2json(tempXml);
+					if(tempJsn != null)
+					{
+						var obje;
+						var templi;
+						var preMap = {};
+						if(metaType == 'CustomField')
+						{
+							obje = tempJsn.CustomObject;
+							templi = obje.fields;
+						}
+						else if(metaType == 'ListView')
+						{
+							obje = tempJsn.CustomObject;
+							templi = obje.listViews;
+						}
+						else if(metaType == 'CompactLayout')
+						{
+							obje = tempJsn.CustomObject;
+							templi = obje.compactLayouts;
+						}
+						else if(metaType == 'WebLink')
+						{
+							obje = tempJsn.CustomObject;
+							templi = obje.webLinks;
+						}
+						else if(metaType == 'RecordType')
+						{
+							obje = tempJsn.CustomObject;
+							templi = obje.recordTypes;
+						}
+						else if(metaType == 'FieldSet')
+						{
+							obje = tempJsn.CustomObject;
+							templi = obje.fieldSets;
+						}
+						else if(metaType == 'ValidationRule')
+						{
+							obje = tempJsn.CustomObject;
+							templi = obje.validationRules;
+						}
+						else if(metaType == 'AssignmentRule')
+						{
+							obje = tempJsn.AssignmentRules;
+							templi = obje.assignmentRule;
+						}
+						else if(metaType == 'AutoResponseRule')
+						{
+							obje = tempJsn.AutoResponseRules;
+							templi = obje.autoResponseRule;
+						}
+						else if(metaType == 'WorkflowTask')
+						{
+							obje = tempJsn.Workflow;
+							templi = obje.tasks;
+						}
+						else if(metaType == 'WorkflowOutboundMessage')
+						{
+							obje = tempJsn.Workflow;
+							templi = obje.outboundMessages;
+						}
+						else if(metaType == 'WorkflowFieldUpdate')
+						{
+							obje = tempJsn.Workflow;
+							templi = obje.fieldUpdates;
+						}
+						else if(metaType == 'WorkflowAlert')
+						{
+							obje = tempJsn.Workflow;
+							templi = obje.alerts;
+						}
+						else if(metaType == 'WorkflowRule')
+						{
+							obje = tempJsn.Workflow;
+							templi = obje.rules;
+						}
+						
+						if(templi != undefined)
+						{
+							if(templi.fullName == undefined)
+						    {			    	
+						    	$.each(templi, function( i, v )
+							    {
+							    	preMap[v.fullName] = JSON.stringify(v);
+							    });  
+						    }
+						    else
+						    {
+							    preMap[templi.fullName] = JSON.stringify(templi);
+						    }
+					    }
+						preMap[itemName] = tgtmap[itemName];
+						updatedJsn = '[';
+						for(var name in preMap)
+						{
+							if(updatedJsn == '[')
+							{
+								updatedJsn += preMap[name];
+							}
+							else
+							{
+								updatedJsn+=','+preMap[name];
+							}
+						}
+						updatedJsn+=']';
+						if(metaType == 'CustomField')
+						{
+							obje.fields = JSON.parse(updatedJsn);
+							tempJsn.CustomObject = obje;
+						}
+						else if(metaType == 'ListView')
+						{
+							obje.listViews = JSON.parse(updatedJsn);
+							tempJsn.CustomObject = obje;
+						}
+						else if(metaType == 'CompactLayout')
+						{
+							obje.compactLayouts = JSON.parse(updatedJsn);
+							tempJsn.CustomObject = obje;
+						}
+						else if(metaType == 'WebLink')
+						{
+							obje.webLinks = JSON.parse(updatedJsn);
+							tempJsn.CustomObject = obje;
+						}
+						else if(metaType == 'RecordType')
+						{
+							obje.recordTypes = JSON.parse(updatedJsn);
+							tempJsn.CustomObject = obje;
+						}
+						else if(metaType == 'FieldSet')
+						{
+							obje.fieldSets = JSON.parse(updatedJsn);
+							tempJsn.CustomObject = obje;
+						}
+						else if(metaType == 'ValidationRule')
+						{	
+							obje.validationRules = JSON.parse(updatedJsn);
+							tempJsn.CustomObject = obje;
+						}
+						else if(metaType == 'AssignmentRule')
+						{		
+							obje.assignmentRule = JSON.parse(updatedJsn);
+							tempJsn.AssignmentRules = obje;
+						}
+						else if(metaType == 'AutoResponseRule')
+						{
+							obje.autoResponseRule = JSON.parse(updatedJsn);
+							tempJsn.AutoResponseRules = obje;
+						}
+						else if(metaType == 'WorkflowTask')
+						{
+							obje.tasks = JSON.parse(updatedJsn);
+							tempJsn.Workflow = obje;
+						}
+						else if(metaType == 'WorkflowOutboundMessage')
+						{
+							obje.outboundMessages = JSON.parse(updatedJsn);
+							tempJsn.Workflow = obje;
+						}
+						else if(metaType == 'WorkflowFieldUpdate')
+						{
+							obje.fieldUpdates = JSON.parse(updatedJsn);
+							tempJsn.Workflow = obje;
+						}
+						else if(metaType == 'WorkflowAlert')
+						{
+							obje.alerts = JSON.parse(updatedJsn);
+							tempJsn.Workflow = obje;
+						}
+						else if(metaType == 'WorkflowRule')
+						{
+							obje.rules = JSON.parse(updatedJsn);
+							tempJsn.Workflow = obje;
+						}
+						tempXml = x2js.json2xml_str($.parseJSON(JSON.stringify(tempJsn)));
+						tempXml = '<?xml version="1.0" encoding="UTF-8"?>'+tempXml;
+					}
+				}
+			}
+			return tempXml;
+    	}
+		
+		function getPatchXml(xmlList,metItemLi)
+		{
+			var x2js = new X2JS();
+			var tgtmap = {};
+			var li = [];
+			for(var index = 0; index < xmlList.length; index++)
+			{
+				var xml = xmlList[index];
+				
+				var srcjson = x2js.xml_str2json(xmlList[index]);
+				if(srcjson != null)
+				{
+					var srcMetaItem = srcjson.CustomLabels;
+					var srcitems = srcMetaItem.labels;
+					
+					if(srcitems != undefined)
+					{
+						if(srcitems.fullName == undefined)
+					    {			    	
+					    	$.each(srcitems, function( i, v )
+						    {
+						    	tgtmap[v.fullName] = JSON.stringify(v);
+						    });  
+					    }
+					    else
+					    {
+						    tgtmap[srcitems.fullName] = JSON.stringify(srcitems);
+					    }
+				    }
+				}
+			}
+			if(metItemLi.length > 0)
+			{
+				var finalXml = '';
+				var fileName = '';
+				for(var l in metItemLi)
+				{
+					if(l < metItemLi.length)
+					{
+						var itemName = metItemLi[l].itemName;
+						if(fileName == '')
+							fileName = metItemLi[l].fileName;
+						if(tgtmap[itemName] != undefined)
+						{
+							if(finalXml.length > limitofZip)
+							{
+								li.push(finalXml);
+								finalXml = '';
+							}
+							finalXml+='<labels>'+x2js.json2xml_str($.parseJSON(tgtmap[itemName]));
+							finalXml+='</labels>'
+						}
+						else
+						{
+							console.log('label--not found--:'+itemName);
+						}
+					}
+				}
+				li.push(finalXml);
+			}
+			return li;
+		}
+		
+		function succ(input) 
+		{
+			var alphabet = 'abcdefghijklmnopqrstuvwxyz',
+		    length = alphabet.length,
+		    result = input,
+		    i = input.length;
+		
+			while(i >= 0) 
+			{
+			    var last = input.charAt(--i),
+			        next = '',
+			        carry = false;
+			
+			    if (isNaN(last)) 
+			    {
+			        index = alphabet.indexOf(last.toLowerCase());
+			
+			        if (index === -1) 
+			        {
+			            next = last;
+			            carry = true;
+			        }
+			        else 
+			        {
+			            var isUpperCase = last === last.toUpperCase();
+			            next = alphabet.charAt((index + 1) % length);
+			            if (isUpperCase) 
+			            {
+			                next = next.toUpperCase();
+			            }
+			
+			            carry = index + 1 >= length;
+			            if (carry && i === 0) 
+			            {
+			                var added = isUpperCase ? 'A' : 'a';
+			                result = added + next + result.slice(1);
+			                break;
+			            }
+			        }
+			    }
+			    else 
+			    {
+			        next = +last + 1;
+			        if(next > 9) 
+			        {
+			            next = 0;
+			            carry = true
+			        }
+			
+			        if (carry && i === 0) 
+			        {
+			            result = '1' + next + result.slice(1);
+			            break;
+			        }
+			    }
+			
+			    result = result.slice(0, i) + next + result.slice(i + 1);
+			    if (!carry) 
+			    {
+			        break;
+			    }
+		  	}
+		  	return result;
+		}
+	</script>       
+</apex:page>

@@ -1,0 +1,252 @@
+<apex:page standardController="Flosum__Patch__c" extensions="Flosum.CreateMultiMetaPatchController" sidebar="false">
+<style>
+	.pagination {
+padding: 1%;
+}
+td .dataCell label {
+font-weight: normal;
+}
+div .pagination {
+	text-align: center;
+}
+span.paginationEle {
+margin-left: 4px;
+}
+.pagination input {
+margin-left: 4px;
+}
+tr.dataRow:hover {
+  background-color: rgba(15, 161, 250, 0.14);
+}
+td.dataCell {
+  border-bottom: 1px solid #e3deb8!important;
+}
+th.headerRow {
+  border-bottom: 2px solid #ccc!important;
+}
+</style>
+	<c:Wait />	
+	<apex:form id="form"> 
+		<apex:pagemessages id="msg"/>
+		<apex:pageBlock title="Create Patch" id="pBlock"> 
+			<apex:pageBlockButtons >
+		        <apex:commandButton value="Refresh List" action="{!listRecordType}" rendered="{!if(organisationId !=null && snapshotId !=null && metaItemList.size>0,true,false)}" oncomplete="hide();" rerender="form" onclick="show();"/>
+		        <apex:commandButton value="Add To Patch" action="{!performSavePatch}" rendered="{!if(availableMetatypes.size>0,true,false)}" oncomplete="hide();" rerender="form" onclick="show();"/>
+		        
+		        <apex:commandButton value="Refresh List" action="{!listSnapShot}" rendered="{!if(organisationId == 'repository' && compMetatypes.size>0,true,false)}" oncomplete="hide();" rerender="form" onclick="show();"/>
+		        <apex:commandButton value="Add To Patch" action="{!componentSavePatch}" rendered="{!if(organisationId == 'repository' && compMetatypes.size>0,true,false)}" oncomplete="hide();" rerender="form" onclick="show();"/>
+			</apex:pageBlockButtons>
+			
+			<apex:pageBlockSection columns="1">
+				<apex:selectList label="Organization :" size="1" value="{!organisationId}" >
+	                <apex:selectOptions value="{!organisationNames}" />
+	                <apex:actionSupport event="onchange"  reRender="pBlock,msg" action="{!listSnapShot}" oncomplete="hide();" onsubmit="show();"/> 
+	            </apex:selectList>
+	            
+	            <apex:selectList label="Snapshot :" size="1" value="{!snapshotId}" rendered="{!if(organisationId != '' && organisationId != 'repository',true,false)}" id="snaplist">
+	                <apex:selectOptions value="{!snapshotNames}"/>
+	                <apex:actionSupport event="onchange" action="{!listRecordType}"  reRender="pBlock,msg" oncomplete="hide();" onsubmit="show();"/> 
+	            </apex:selectList>
+	            
+				<apex:selectList value="{!selectedMetadataType}" multiselect="false" size="1" label="Metadata Types :" rendered="{!if(availableMetatypes.size>0,true,false)}" >
+	             	<apex:selectoptions value="{!availableMetatypes}" /> 
+	             	<apex:actionSupport event="onchange" action="{!fillMetadataItems}"  reRender="tb,msg" oncomplete="hide();" onsubmit="show();"/>
+	            </apex:selectList>
+	            
+	 			<apex:selectList value="{!selectedComponentType}" multiselect="false" size="1" label="Component Types :" rendered="{!if(compMetatypes.size>0 && organisationId == 'repository' ,true,false)}" >
+	             	<apex:selectoptions value="{!compMetatypes}" /> 
+	             	<apex:actionSupport event="onchange" action="{!fillComponentItems}"  reRender="cb,msg" oncomplete="hide();" onsubmit="show();"/>    
+	            </apex:selectList>
+	            
+	            <apex:pageBlockSectionItem rendered="{!if(availableMetatypes.size>0 || organisationId == 'repository',true,false)}">
+	            	<apex:outputLabel value="Patch Name :" />
+	            	<apex:InputText value="{!patchName}"/>
+	            </apex:pageBlockSectionItem>         	            
+			</apex:pageBlockSection>
+			<apex:outputpanel rendered="{!if(organisationId == 'repository' && componentList.size>0,true,false)}" id="cb">
+				
+				<table cellspacing="0" cellpadding="0" border="0" class="list">
+					<thead>
+						<tr class="headerRow">
+				            <th class="headerRow" scope="col" colspan="1" width="40px">
+				                <input type="checkbox" onclick="checkItemAll(this);" styleclass="sli" >&nbsp;</input>
+				            </th>
+				            <th class="headerRow" scope="col" colspan="1">
+				                Component Type
+				            </th>
+				            <th class="headerRow" scope="col" colspan="1">
+				                Component Name
+				            </th>
+				            <th class="headerRow" scope="col" colspan="1">
+				                Version
+				            </th>
+				            <th class="headerRow" scope="col" colspan="1">
+				                Last Modified Date
+				            </th>
+				            <th class="headerRow" scope="col" colspan="1">
+				                Last Modified By
+				            </th>
+				        </tr>
+			        </thead>
+			        <tbody>
+					    <apex:repeat value="{!componentList}" var="mi">
+					        <tr class="dataRow" id="componentRow">
+					            <td class="dataCell" colspan="1" width="40px">
+									<apex:inputCheckbox value="{!mi.checkStatus}" styleclass="sli {!mi.componentName}" onchange="childChange('{!mi.componentName}'+'child',this);"/>
+								</td>
+								<td class="dataCell" colspan="1">
+									<label>{!mi.componentType}</label>
+								</td>
+								<td class="dataCell" colspan="1">
+									<label>{!mi.componentName}</label>
+								</td>
+								<td class="dataCell" colspan="1">
+									<label>{!mi.version}</label>
+								</td>
+								<td class="dataCell" colspan="1">
+									<label>{!mi.LastModifiedDate}</label>
+								</td>
+								<td class="dataCell" colspan="1">
+									<label>{!mi.LastModifiedBy}</label>
+								</td>
+					        </tr>
+						        <apex:repeat value="{!mi.historyList}" var="li">
+							        <tr class="dataRow"> 
+					            		<td class="dataCell" colspan="1" >
+											
+										</td>
+										<td class="dataCell" colspan="2" width="40px">
+											<apex:inputCheckbox value="{!li.checkStatus}" styleClass="{!mi.componentName}child" onchange="unCheckAllRelated('{!mi.componentName}',this);"/>
+										</td>
+										<td class="dataCell" colspan="1">
+											<label>{!li.version}</label>
+										</td>
+										<td class="dataCell" colspan="1">
+											<label>{!li.LastModifiedDate}</label>
+										</td>
+										<td class="dataCell" colspan="1">
+											<label>{!li.LastModifiedBy}</label>
+										</td>
+							        </tr>
+								</apex:repeat>
+				    	</apex:repeat>
+				    </tbody>
+				</table>
+				<apex:outputPanel layout="block" styleClass="pagination">
+						<apex:commandbutton value="First" action="{!componentFirstPage}" reRender="cb,msg" disabled="{!ComponentPrev}" onClick="show();" onComplete="hide();"/>
+						<apex:commandbutton value="Previous" action="{!componentPrevious}" reRender="cb,msg" disabled="{!ComponentPrev}" onClick="show();" onComplete="hide();"/>
+						<apex:outputText value="{!paginationStr}" styleClass="paginationEle"/>
+						<apex:commandbutton value="Next" action="{!componentNext}" reRender="cb,msg" disabled="{!ComponentNxt}" onClick="show();" onComplete="hide();"/>
+						<apex:commandbutton value="Last" action="{!componentLastPage}" reRender="cb,msg" disabled="{!ComponentNxt}" onClick="show();" onComplete="hide();"/>
+				</apex:outputPanel>
+			</apex:outputPanel>
+			<apex:pageBlockSection id="tb" columns="1">
+				<apex:pageBlocktable value="{!metaItemList}" var="mi" rendered="{!if(metaItemList.size>0,true,false)}">
+					<apex:column headervalue="Select">
+						<apex:facet name="header"><input type="checkbox" onclick="checkItemAll(this);" styleclass="sli" >&nbsp;</input></apex:facet>
+						<apex:inputCheckbox value="{!mi.checkStatus}" styleclass="sli"/>
+					</apex:column>
+		        	<apex:column headervalue="Full Name"><apex:outputLabel value="{!mi.fullname}" /></apex:column>
+		        	<apex:column headervalue="Last Modified Date"><apex:outputLabel value="{!mi.lastmodifiedbydate}" /></apex:column>
+		        	<apex:column headervalue="Last Modified By"><apex:outputLabel value="{!mi.lastmodifiedbyname}" /></apex:column>
+		        	<apex:column headervalue="Created By"><apex:outputLabel value="{!mi.createdbyname}" /></apex:column> 
+		        </apex:pageBlocktable>
+		        <apex:outputPanel rendered="{!if(metaItemList.size > 0,true,false)}" layout="block" styleClass="pagination">
+						<apex:commandbutton value="First" action="{!FirstPage}" reRender="tb,msg" disabled="{!prev}" onClick="show();" onComplete="hide();"/>
+						<apex:commandbutton value="Previous" action="{!previous}" reRender="tb,msg" disabled="{!prev}" onClick="show();" onComplete="hide();"/>
+						<apex:outputText value="{!paginationStr}" styleClass="paginationEle"/>
+						<apex:commandbutton value="Next" action="{!next}" reRender="tb,msg" disabled="{!nxt}" onClick="show();" onComplete="hide();"/>
+						<apex:commandbutton value="Last" action="{!LastPage}" reRender="tb,msg" disabled="{!nxt}" onClick="show();" onComplete="hide();"/>
+				</apex:outputPanel>
+			</apex:pageBlockSection>
+		</apex:pageBlock>
+
+	</apex:form>
+	<script>
+	function checkItemAll(ele) 
+	{
+		var changeClass = ele.getAttribute('styleclass');
+		console.log(changeClass);
+		var checkboxes = document.getElementsByClassName(changeClass);
+		console.log(checkboxes.length);
+		if (ele.checked) 
+		{
+	        for (var i = 0; i < checkboxes.length; i++) 
+	        {
+	        	if (checkboxes[i].type == 'checkbox') 
+			    {
+			    	checkboxes[i].checked = true;
+			    	var cl = ""+checkboxes[i].getAttribute('class');
+					var li = cl.split(' ');
+				
+					if(li.length == 2)
+					{
+				     	console.log(li[1]);
+				     	var allChilds = document.getElementsByClassName(li[1]+'child');
+				     	console.log(allChilds.length);
+				     	for (var j = 0; j < allChilds.length; j++) 
+						{
+						   	if (allChilds[j].type == 'checkbox') 
+						   	{
+						       	allChilds[j].checked = false;
+						   	}
+						}
+					}
+			    }
+	        }
+		} 
+	    else 
+	    {
+	        for (var i = 0; i < checkboxes.length; i++) 
+	        {
+	            if (checkboxes[i].type == 'checkbox') 
+	            {
+	                checkboxes[i].checked = false;
+	            }
+	        }
+	    }
+	}
+	
+	function childChange(className ,ele)
+	{	
+		if (ele.checked) 
+		{
+			var checkboxes = document.getElementsByClassName(className);
+        	for (var i = 0; i < checkboxes.length; i++) 
+        	{
+	        	if (checkboxes[i].type == 'checkbox') 
+	        	{
+	            	checkboxes[i].checked = false;
+	        	}
+        	}
+	    }
+	}
+	
+	function unCheckAllRelated(className ,ele)
+	{
+		if(ele.checked)
+		{
+			var checkboxes = document.getElementsByClassName(className+'child');
+			
+			for (var i = 0; i < checkboxes.length; i++) 
+        	{
+	        	if (checkboxes[i].type == 'checkbox' && ele != checkboxes[i]) 
+	        	{
+	            	checkboxes[i].checked = false;
+	        	}
+        	}
+        	
+        	var parentCheck = document.getElementsByClassName(className);
+        	for (var i = 0; i < parentCheck.length; i++) 
+        	{
+	        	if (parentCheck[i].type == 'checkbox' ) 
+	        	{
+	            	parentCheck[i].checked = false;
+	        	}
+        	}
+		}
+
+	}
+ 
+	</script>
+</apex:page>

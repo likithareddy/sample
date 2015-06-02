@@ -1,0 +1,143 @@
+<apex:page standardController="copado__Git_Backup__c" extensions="copado.BackupNow,copado.EditBackupExtension" title="View {!$ObjectType.copado__Git_Backup__c.Label}" action="{!init}">
+    <head>
+        <c:GAnalytics />
+        <apex:includeScript value="{!URLFOR($Resource.copado__Statics,'js/libs/jquery.min.1.10.2.js')}" />
+        
+        <apex:includeScript value="{!URLFOR($Resource.copado__Statics, 'js/Cometd.js')}"/>                
+        <apex:includeScript value="{!URLFOR($Resource.copado__Statics, 'js/json2.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.copado__Statics, 'js/jquery.cometd.js')}"/>
+        <apex:includeScript value="{!URLFOR($Resource.copado__Statics,'js/copadoStreamingService.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.copado__Statics,'js/statusManager.js')}" />
+        <apex:includeScript value="{!URLFOR($Resource.copado__Statics,'js/utils.js')}" />
+        
+        <apex:includeScript value="{!URLFOR($Resource.copado__jqx,'jqwidgets/jqx-all.js')}" />
+        <script> 
+            var $copado = jQuery.noConflict(); 
+            __sfdcSessionId = '{!GETSESSIONID()}';
+        </script>
+        <script src="/soap/ajax/32.0/connection.js"></script>
+        <script type="text/javascript">
+        /**
+         * Handler app for Snapshot_Difference__c UI
+         * @type {Object}
+         */
+        var copadoApp = {
+            init: function(opt){
+                console.log('copadoApp initialised');
+            },
+            doSnapshot: function(){
+                var isBackupEnabled = {!isBackupEnabled};
+                if(isBackupEnabled){
+                    console.log('starting snapshot');
+                    lockScreen();
+                    setTimeout(function(){
+                        doBackup();
+                    },2000);
+                }
+            },
+            onSuccess: function(){
+                unlockScreen();
+                reRender();
+            }
+        }
+        </script>
+    </head>
+    <c:ScreenLocker msg="{!$Label.copado__LOADING}" />
+    <apex:form id="theForm">
+    <apex:actionFunction name="doBackup" action="{!doBackup}" reRender=""/>
+    <apex:actionFunction name="reRender" action="{!reRender}" reRender="theForm,rl_commits"/>
+
+    <apex:sectionHeader title="{!$ObjectType.copado__Git_Backup__c.Label}" subtitle="{!copado__Git_Backup__c.Name}" description="{!$Label.copado__GIT_BACKUP_EDIT_DESCRIPTION}"/>
+        <apex:pageMessages />
+        
+                <apex:pageBlock id="pb_viewGitBackup"  mode="view" helpUrl="http://www.copa.do/cms/documentation" helpTitle="{!$Label.copado__HELP_FOR_THIS_PAGE}">
+                    <apex:pageblockButtons rendered="{!isBackupEnabled}">
+                        <apex:commandButton value="{!$Label.site.edit}" action="{!edit}" disabled="{!!isValid}"/>
+                        <apex:commandButton value="{!$Label.copado__DELETE}" action="{!delete}" />
+                        <!--apex:commandButton value="{!$Label.TEST_CONNECTIONS}" action="{!doTestConnections}" disabled="{!isValid}" /-->
+                        
+                        <!-- Label to be created in next release. now to be able to patch is hard coded -->
+                        <apex:commandButton value="Retrieve Commits" action="{!getCommits}" disabled="{!!isValid}" rendered="{!isBackupEnabled}"/>
+                        <!--
+                        <apex:commandButton value="{!$Label.BACKUP_NOW}" action="{!doBackup}" disabled="{!!isValid}" rendered="{!isBackupEnabled}"/>
+                        -->
+                        <input type="button" class="btn" value="{!$Label.BACKUP_NOW}" onclick="copadoApp.doSnapshot();return false;"/>
+                        
+                    </apex:pageblockButtons>
+                  
+                    <apex:pageBlockSection title="{!$Label.copado__BASIC_INFORMATION}">
+                        <apex:outputField value="{!copado__Git_Backup__c.Name}" />
+                        <apex:outputField value="{!copado__Git_Backup__c.copado__Frequency__c}" />
+                        <apex:outputField value="{!copado__Git_Backup__c.copado__Git_Repository__c}" />
+                        <apex:outputField value="{!copado__Git_Backup__c.copado__Org__c}" />
+                        <apex:outputField value="{!copado__Git_Backup__c.copado__Branch__c}" />
+                        <apex:outputField value="{!copado__Git_Backup__c.copado__Last_Backup__c}" />
+                        <!--apex:pageBlockSectionItem -->
+                            <!--apex:outputLabel for="val" value="{!$Label.VALIDATION}"> </apex:outputLabel-->
+                            <!--apex:outputText id="val" value="{!validation}"></apex:outputText-->
+                        <!--/apex:pageBlockSectionItem-->
+                    </apex:pageBlockSection>
+                    <apex:pageBlockSection Title="{!$Label.copado__ADVANCED_METADATA_FILTERS}"
+                        collapsible="true"
+                        showHeader="true"
+                        id="typesSection"
+                        columns="1"
+                    >
+                        <apex:pageBlockTable value="{!sel}" var="t" >
+                            <apex:column value="{!t}"> <apex:facet name="header">{!$ObjectType.copado__Org__c.fields.copado__Metadata_Types__c.Label}</apex:facet> </apex:column>
+                        </apex:pageBlockTable>
+                    </apex:pageBlockSection>
+                        
+                        <script> 
+                    function twistSection(twisty, sectionId) {
+                        //twistSection code from salesforce.com
+                        var parentDiv = twisty;
+                        while (parentDiv.tagName != 'DIV') { parentDiv = parentDiv.parentNode; }
+                        var headerId = sectionId || (parentDiv.id.split('_'))[1];
+                        var div = parentDiv.nextSibling;
+                        var elemWasOn = false;
+                        if (div.style.display != 'none')
+                        {
+                        div.style.display = 'none';
+                        twisty.className ='showListButton';
+                        twisty.alt = twisty.title = 'Show Section - '+twisty.name;
+                        elemWasOn = true;
+                        }
+                        else
+                        {
+                        div.style.display = 'block';
+                        twisty.className ='showListButton';
+                        twisty.alt = twisty.title = 'Show Section - '+twisty.name;
+                        elemWasOn = false;
+                        }
+                    } 
+
+                    twistSection( $copado('[id$="typesSection"]').find('img')[0]);
+                </script>
+                <script type="text/javascript">
+                    $copado(document).ready(function(){
+                        copadoStreamingService.init();
+                        //copadoStreamingService.subscribeCopadoNotifications(statusManager.readStream);
+                        console.log('streaming services should be initialised...');
+                        statusManager.herokuServer = '{!settings.herokuServer}';
+                        statusManager.urlParameters = '{!settings.urlParameters}';
+                        statusManager.sessionId = __sfdcSessionId;
+                        statusManager.parentId = '{!copado__Git_Backup__c.Id}';
+                        statusManager.initFunction = copadoApp.init({
+                                    Id: '{!copado__Git_Backup__c.Id}'  
+                                })
+                        statusManager.successFunction = copadoApp.onSuccess;
+                        window.onbeforeunload = copadoStreamingService.disconnect;
+                        setTimeout(function(){
+                            statusManager.initialise();
+                        },2000);  
+                    });
+                </script>
+                </apex:pageBlock>
+     </apex:form>
+     <apex:outputPanel rendered="false">
+        <apex:outputField value="{!copado__Git_Backup__c.copado__Metadata_Types__c}"/>
+    </apex:outputPanel>
+     <apex:relatedList list="Git_Org_Commits__r" id="rl_commits"/>
+     <c:CheckFeaturesComponent />
+</apex:page>

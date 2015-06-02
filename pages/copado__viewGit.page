@@ -1,0 +1,24 @@
+<apex:page standardController="copado__Git_Repository__c" extensions="copado.EditGit" action="{!validate}" title="{!$Label.copado__VIEW} {!$ObjectType.copado__Git_Repository__c.Label}">
+    <c:GAnalytics />
+	<apex:form >
+	<apex:sectionHeader title="{!$ObjectType.copado__Git_Repository__c.Label}" subtitle="{!git.Name}"/>
+		<apex:pageMessages />
+		<apex:pageBlock id="pb_createGit"  mode="view" helpUrl="http://www.copa.do/cms/documentation" helpTitle="{!$Label.copado__HELP_FOR_THIS_PAGE}">
+			<apex:pageblockButtons >
+                <apex:commandButton value="{!$Label.site.edit}" action="{!edit}" />
+                <apex:commandButton value="{!$Label.copado__DELETE}" action="{!delete}" />
+            </apex:pageblockButtons>
+            <apex:pageBlockSection columns="1">
+                <apex:outputField value="{!git.Name}" />
+                <apex:outputField value="{!git.copado__URI__c}" />
+                <apex:outputField value="{!git.copado__Username__c}" />
+                
+                <apex:pageBlockSectionItem >
+					<apex:outputLabel value="Password" />
+				    <apex:outputText value="{!dumypass}"/>
+				</apex:pageBlockSectionItem> 
+            </apex:pageBlockSection>
+        </apex:pageBlock>
+     </apex:form>
+     <apex:relatedList list="Git_Backups__r" />
+</apex:page>

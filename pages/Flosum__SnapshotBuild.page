@@ -1,0 +1,781 @@
+<apex:page standardstylesheets="false" sidebar="false" docType="html-5.0" controller="Flosum.SnapshotBuildController">  
+<apex:includeScript value="{!URLFOR($Resource.Flosum__jszip, '/jszip.js')}"/>
+<apex:includeScript value="{!URLFOR($Resource.Flosum__jszip, '/jszip-load.js')}"/>
+<apex:includeScript value="{!URLFOR($Resource.Flosum__jszip, '/jszip-deflate.js')}"/>
+<apex:includeScript value="{!URLFOR($Resource.Flosum__jszip, '/jszip-inflate.js')}"/>
+<style>
+.lookupInput a {
+width: 49px !important;
+ }
+
+.label-padding {
+	padding: 6px;
+	margin-bottom: 0px;
+	font-weight:normal;
+}
+
+.input-group {
+    margin-top: 10px;
+}
+
+.sep-input {
+    border-radius: 3px !important;
+    border-right: solid 1px #ccc !important;
+}
+
+.att-label {
+    width: 100px !important;
+}
+
+.att-input {
+    width: 200px !important;
+}
+
+.input-group-sm> .att-input , {
+    width: 100px;
+}
+
+.table thead {
+background: #F4F8FA;
+}
+
+.list-group-item h4 {
+    color: #005186;
+}
+.emailthediff label {
+margin-right: 10px;
+}
+</style>
+<c:Wait />
+<apex:form >
+	
+	<apex:actionfunction name="authTr" action="{!authenticateTarget}" rerender="pageMessage" oncomplete="hide();">
+		<apex:param name="srcid" assignTo="{!snapTarget.Flosum__Organisation__c}" value=""/>
+	</apex:actionfunction>
+	
+		<apex:actionfunction name="fillSnapId" rerender="pageMessage">
+		<apex:param name="sid" assignTo="{!metaItem.Flosum__Snapshot__c}" value=""/> 
+	</apex:actionfunction>
+	
+</apex:form>
+<apex:form >
+	
+	<apex:actionfunction name="showMessage" action="{!showMessage}" rerender="pageMessage" oncomplete="hide();"> 
+		<apex:param name="msg" assignTo="{!message}" value=""/>  
+	</apex:actionfunction>
+	
+	<apex:actionfunction name="sendEmail" action="{!notifyUsers}" rerender="pageMessage" onComplete="postProcess({!isPostSnapshot})"></apex:actionfunction>
+	
+	<apex:actionfunction name="startSecondRetrieval" action="{!rertrievePostSnapshot}" rerender="pageMessage" oncomplete="hide();checkPostCompletion({!isPostSnapshot},{!authSuccesfull},'{!JSENCODE(postSnapTarget.id)}');"></apex:actionfunction>
+   
+    <apex:actionfunction name="startDeployment" action="{!deploy.startDeployment}" rerender="pageMessage,credentials" oncomplete="checkRequest({!deploy.isDone},{!deploy.allComplete});"></apex:actionfunction>
+   
+  	<apex:actionfunction name="checkAsyncRequest" action="{!deploy.checkStatus}" rerender="pageMessage,credentials" oncomplete="checkRequest({!deploy.isDone},{!deploy.allComplete})"/>
+	<apex:actionfunction name="deployNext" action="{!deploy.deploy}" rerender="pageMessage,credentials" oncomplete="checkRequest({!deploy.isDone},{!deploy.allComplete})"/>
+	
+	<apex:actionfunction name="onceAgainDeploy" action="{!deploy.againDeploy}" rerender="pageMessage,credentials" oncomplete="checkRequest({!deploy.isDone},{!deploy.allComplete})">
+		<apex:param assignTo="{!deploy.base64AttBody}" value="" name="newstr"/>
+	</apex:actionfunction>
+	
+	<!-- final patch Deploy -->
+	<apex:actionfunction name="finalPatchDeploy" action="{!deploy.finalPatchDeploy}" rerender="pageMessage,credentials" oncomplete="checkFinalRequest({!deploy.isDone})">
+		<apex:param assignTo="{!deploy.base64AttBody}" value="" name="newstr"/>
+	</apex:actionfunction>
+	<apex:actionfunction name="checkFinalAsyncRequest" action="{!deploy.finalCheckStatus}" rerender="pageMessage,credentials" oncomplete="checkFinalRequest({!deploy.isDone})"/>
+	<apex:actionfunction name="onceAgainFinalDeploy" action="{!deploy.againDeploy}" rerender="pageMessage,credentials" oncomplete="checkFinalRequest({!deploy.isDone})">
+		<apex:param assignTo="{!deploy.base64AttBody}" value="" name="newstr"/>
+	</apex:actionfunction>
+	<apex:actionfunction name="checkMultiFinalAsyncRequest" action="{!deploy.finalCheckStatus}" rerender="pageMessage,credentials" oncomplete="checkfinalBreakDeploy({!deploy.isDone})"/>
+	<apex:actionfunction name="MultiFinalDeploy" action="{!deploy.finalPatchDeploy}" rerender="pageMessage,credentials" oncomplete="checkfinalBreakDeploy({!deploy.isDone})">
+		<apex:param assignTo="{!deploy.base64AttBody}" value="" name="newstr"/>
+	</apex:actionfunction>
+	
+	
+	<apex:actionfunction name="showfinalmessage" action="{!deploy.allDeployOperationComplete}" rerender="pageMessage" onComplete="clearFieldsAndDeploy({!isPatch},{!deploy.deployIdList.size});"/> 
+    
+    <apex:outputpanel id="pageMessageDiv" >
+                    <apex:pageMessages id="pageMessage" escape="false"/>
+                 </apex:outputpanel>
+    <apex:pageblock title="Build">
+        
+        <apex:pageblocksection columns="1">
+        
+            <apex:pageblocksectionItem >
+	                  <apex:outputlabel value="Build Name"></apex:outputlabel>
+	                  <apex:inputtext id="snapname1" styleClass="" value="{!snapShotName}" html-placeholder="Enter Build Name Here..." onchange="checksnapname()"/>
+            </apex:pageblocksectionItem>
+        	<apex:pageblocksectionItem >
+	                  <apex:outputlabel value="Build Date"></apex:outputlabel>
+	                  <apex:input type="text" value="{!buildDate}"/> 
+            </apex:pageblocksectionItem>
+        	<apex:pageblocksectionItem >
+                     <apex:outputlabel value="Build Org"></apex:outputlabel>
+                     <apex:inputfield id="trg"  styleClass="" value="{!snapTarget.Flosum__Organisation__c}" onchange="passId();show();">
+                   	</apex:inputfield>
+        	</apex:pageblocksectionItem>
+        	
+       	 </apex:pageblocksection>
+       	 
+         <apex:pageblocksection columns="1" title="Pre Processing">
+            <apex:pageblocksectionitem id="preprocess">
+                <apex:inputCheckbox id="sp" value="{!isSnapshot}"/>
+                <apex:outputlabel value="Backup using a snapshot"></apex:outputlabel>
+            </apex:pageblocksectionItem>
+
+         </apex:pageblocksection>
+         <apex:pageblocksection title="What ?" columns="1">                                     
+             <apex:pageblocksectionItem > 
+	              <apex:outputpanel rendered="{!NOT(patchDetailsList.size>0)}">
+	                  	No Patches Found!
+	              </apex:outputpanel>
+             </apex:pageblocksectionItem>  
+			 <apex:pageblocksectionItem >
+		 	     <apex:pageblocktable value="{!patchDetailsList}" var="pd" rendered="{!patchDetailsList.size>0}">
+		 	     	<apex:column >
+                  		<apex:inputCheckbox value="{!pd.check}"/>
+                  	</apex:column>
+		 	     	<apex:column headerValue="Patch Name">
+                  		<apex:outputtext value="{!pd.PatchName}"/>
+                  	</apex:column>
+                  	<apex:column headerValue="LastModified By">
+                  		<apex:outputText value="{!pd.lastModifiedBy}"/>
+                  	</apex:column>
+                  	<apex:column headerValue="LastModified Date">
+                  		<apex:outputText value="{!pd.lastModifiedDate}"/>
+                  	</apex:column>
+                 </apex:pageblocktable>  
+			 </apex:pageblocksectionItem>
+		</apex:pageblocksection>
+		<apex:pageblocksection title="Alert:" columns="1">
+             <apex:pageblocksectionItem >
+             		 <apex:outputlabel value="On Error"></apex:outputlabel>
+                    <apex:selectList value="{!groupErrorId}" multiselect="false" size="1">
+                    	<apex:selectoptions value="{!groups}" />
+                    </apex:selectList>
+             </apex:pageblocksectionItem>       
+             <apex:pageblocksectionItem >   
+                    <apex:outputlabel value="On Success"></apex:outputlabel>
+                    <apex:selectList value="{!groupSuccessId}" multiselect="false" size="1">
+                    <apex:selectoptions value="{!groups}" />
+                    </apex:selectList>
+             </apex:pageblocksectionItem> 
+        </apex:pageblocksection>
+		<apex:pageblocksection title="Post Processing" columns="1">  
+             <apex:pageblocksectionItem >   
+                    <apex:inputcheckbox value="{!isPostSnapshot}"/>
+                    <apex:outputlabel value="Extract The Snapshot"/>
+            </apex:pageblocksectionitem>
+            <apex:pageblocksectionItem >
+            	<apex:inputcheckbox />
+            	<apex:outputPanel styleClass="emailthediff">
+	            	<apex:outputlabel value="Email the difference"/>
+	            	<apex:inputText />
+            	</apex:outputPanel>
+            </apex:pageblocksectionItem>
+        </apex:pageblocksection> 
+        <apex:pageblockbuttons location="bottom">
+        	<apex:commandbutton action="{!processBuild}" rerender="pageMessage" oncomplete="hide();checkFirstCompletion({!isSnapshot},{!authSuccesfull},'{!JSENCODE(snapTarget.id)}');" styleclass="btn" value="Start Build"/>
+        </apex:pageblockbuttons>
+	   	<apex:outputpanel id="credentials">
+			<apex:inputHidden id="probleItems" value="{!deploy.problemItems}"></apex:inputHidden>
+			<apex:inputHidden id="attId" value="{!deploy.attId}"></apex:inputHidden>
+			<apex:inputHidden value="{!snapTarget.Flosum__Organisation__c}" id="targetId"/>
+			<apex:inputHidden value="{!metaItem.Flosum__Snapshot__c}" id="deploySnapId"/>
+		    <apex:inputHidden value="{!snapshotName}" id="buildsnapname"/>
+		</apex:outputpanel>
+    </apex:pageblock>
+</apex:form>
+<script>
+
+function passId() 
+{
+	//console.log('targetId--:'+$("input[id$='trg_lkid']").val());
+	
+	var _tr = $("input[id$='trg_lkid']").val();
+	if(_tr != undefined && _tr.length>14) 
+	{
+		$("input[id$='targetId']").val(_tr);
+		authTr(_tr);	
+	}
+	else
+	{
+		hide();
+	}
+}
+
+function passSnapId() 
+{
+	//console.log('deploySnapId--:'+$("input[id$='sanpId_lkid']").val());
+	
+	var _tr = $("input[id$='sanpId_lkid']").val();
+	if(_tr != undefined && _tr.length>14) 
+	{
+		$("input[id$='deploySnapId']").val(_tr);
+	}
+}
+
+function checksnapname() 
+{
+	var _snap = $("input[id$='snapname1']").val();
+	//console.log(_snap);
+	if(_snap.length>0)
+	{
+		$("input[id$='buildsnapname']").val(_snap);
+		//isUnique(_snap);
+	}
+}
+
+var snapId;
+var isCreateSnap;
+function checkFirstCompletion(isSnap,authSuccesfull,id) 
+{
+	isCreateSnap = isSnap;
+	if(isSnap)
+	{
+		if(authSuccesfull)
+		{
+			snapId = id;
+			console.log(' checking retrieval status '+ id + ' : '+snapId)
+			Visualforce.remoting.Manager.invokeAction(
+		            '{!$RemoteAction.SnapshotBuildController.checkCompletion}',
+		            id,
+		            handleFirstResult
+		    );
+		 }
+	}
+	else if(authSuccesfull)
+	{
+		// deploy selected snapshot or selected patch
+		console.log('start deployment without creating snapshot');
+		firstDeployment();
+	}
+}
+
+var temp_;
+// Handle Source Snapshot retreival
+function handleFirstResult(r,e) 
+{
+	if(e.status && r != null) 
+	{
+	   temp_ = r
+		if(r.isComplete && !r.isError) 
+		{
+			firstDeployment();
+		} 
+		else if(!r.isComplete && !r.isError) 
+		{
+			setTimeout(function() 
+			{
+				console.log('Job NOT Completed starting second. Check status again ');
+				showMessage(' checking retreival status...#info');
+			    checkFirstCompletion(isCreateSnap,true,snapId);
+			}, 15000);
+		} 
+		else if(r.isComplete && r.isError) 
+		{
+			showMessage(' Snapshot Build Failed. Please see log for details.');
+		}
+	} 
+	else 
+	{
+		showMessage(' Unexpected Error occurred. Connection to server failed.');
+	}
+}
+
+var postSnapId;
+var isPostCreateSnap;
+//check post snapshot retrieval
+function checkPostCompletion(isSnap,authSuccesfull,id) 
+{
+	isPostCreateSnap = isSnap;
+	if(isSnap)
+	{
+		if(authSuccesfull)
+		{
+			postSnapId = id;
+			console.log(' checking retrieval status '+ id + ' : '+postSnapId)
+			Visualforce.remoting.Manager.invokeAction(
+		            '{!$RemoteAction.SnapshotBuildController.checkCompletion}',
+		            id,
+		            handlePostSnapResult
+		    );
+		 }
+	}
+	else if(authSuccesfull)
+	{
+		// deploy selected snapshot or selected patch
+		console.log('build done without creating post snapshot.');
+	}
+}
+
+var postTemp_;
+// Handle post Snapshot retreival
+function handlePostSnapResult(r,e) 
+{
+	if(e.status && r != null) 
+	{
+	    postTemp_ = r
+		if(r.isComplete && !r.isError) 
+		{
+			showMessage(' Post snapshot retrieval completed succesfully#confirm');
+		} 
+		else if(!r.isComplete && !r.isError) 
+		{
+			setTimeout(function() 
+			{
+				console.log('Job NOT Completed starting second. Check status again ');
+				showMessage(' checking retreival status...#info');
+			    checkPostCompletion(isPostCreateSnap,true,postSnapId);
+			}, 15000);
+		} 
+		else if(r.isComplete && r.isError) 
+		{
+			showMessage(' Post snapshot retrieval Failed. Please see log for details.');
+		}
+	} 
+	else 
+	{
+		showMessage(' Unexpected Error occurred. Connection to server failed.');
+	}
+}
+
+function postProcess(isPost)
+{
+	if(isPost)
+	{
+		show();
+		startSecondRetrieval();
+	}
+	else
+	{
+		showMessage(' build done...#confirm');
+	}
+}
+</script>
+	<script>
+	// deployment script
+	var gap;
+	var newzipcount = 5;
+	var str = '';
+	var isAttachment = true;
+	var zip,newzip, finalzip;
+	finalzip = new JSZip();
+	var finalzipone ;
+	var finalziptwo ;
+	Visualforce.remoting.timeout = 120000;
+	var first = false;
+	var multifinalarray;
+	var multifinalindex = 0;	
+	
+	function clearFieldsAndDeploy(isPatch,size)
+	{
+		newzipcount = 5;
+		str = '';
+		isAttachment = true;
+		zip = undefined;
+		newzip = undefined;
+		finalzip = new JSZip();
+		finalzipone = undefined;
+	    finalziptwo = undefined;
+	    first = false;
+	    multifinalarray = undefined;
+	    multifinalindex = 0;
+	    
+	    if(isPatch)
+	    {
+	    	if(size > 0)
+	    	{
+	    		startDeployment();
+	    	}
+	    	else
+	    	{
+	    		sendEmail();
+	    	}
+	    }
+	    else
+	    {
+	    	sendEmail();
+	    }
+	}
+	
+	function firstDeployment()
+	{
+		newzipcount = 5;
+		str = '';
+		isAttachment = true;
+		zip = undefined;
+		newzip = undefined;
+		finalzip = new JSZip();
+		finalzipone = undefined;
+	    finalziptwo = undefined;
+	    first = false;
+	    multifinalarray = undefined;
+	    multifinalindex = 0;
+	    startDeployment();
+	}
+	
+		function checkRequest(v,a) 
+		{
+			// Check status
+			if(!v)
+			{
+				gap = setTimeout(checkAsyncRequest,5000);
+			}
+			// Status done
+			else if(v)
+			{
+				clearTimeout(gap);
+				str = $("input[id$='probleItems']").val();
+				var error;
+				if(str != '')
+					error = true;
+				else
+					error = false;
+				// state.error is true
+				if(error && newzipcount>4)
+				{
+					// ---------------again deploy
+					var attId = $("input[id$='attId']").val();
+					if(attId != undefined && isAttachment)
+					{
+						Visualforce.remoting.Manager.invokeAction(
+				            '{!$RemoteAction.SnapshotBuildController.getAttachmentBody}',
+				            attId,
+				            handleResult   
+				        );
+			        }
+			        else
+			        {
+			        	var tempEvent = {};
+			        	tempEvent.status = true;
+			        	var newstr_temp = newzip.generate({type:"base64"});
+
+			        	handleResult(newstr_temp, tempEvent);
+			        }
+					
+				}
+				// All attachments deployed
+				else if(a)
+				{
+					var finalcount = 0;
+					for(var name in finalzip.files)
+					{
+						finalcount ++;
+						
+					}
+					if(finalcount > 0 )
+					{	
+						var finalstr = finalzip.generate({type:"base64"});
+						if(finalstr.length < 2900000)
+						{
+							var xmldata= '<?xml version="1.0" encoding="UTF-8"?> <Package xmlns="http://soap.sforce.com/2006/04/metadata"><types><members>*</members><name>ApexClass</name></types><types><members>*</members><name>ApexComponent</name></types><types><members>*</members><name>ApexPage</name></types><types><members>*</members><name>ApexTrigger</name></types><types><members>*</members><name>ApprovalProcess</name></types><types><name>AssignmentRule</name></types><types><members>*</members><name>CustomLabels</name></types><types><members>*</members><name>CustomObject</name></types><types><members>*</members><name>CustomPageWebLink</name></types><types><members>*</members><name>CustomTab</name></types><types><members>*</members><name>Layout</name></types><types><members>*</members><name>Profile</name></types><types><name>RemoteSiteSetting</name></types><types><name>Report</name></types><types><members>*</members><name>Role</name></types><types><members>*</members><name>StaticResource</name></types><types><members>*</members><name>Workflow</name></types><version>29.0</version> </Package>';
+							var xmlname= 'package.xml';
+							finalzip.file(xmlname, ""+xmldata);
+							finalstr = finalzip.generate({type:"base64"});
+							finalPatchDeploy(finalstr);
+						}
+						else
+						{
+							// if string size greater than 2900000
+							multifinalarray = new Array();
+							var finalzipbreaksize = 0;
+							for(var name in finalzip.files)
+							{
+								finalzipbreaksize++;
+							}
+							var finalzipbreaksize = finalzipbreaksize/2;
+							var index=0;
+							finalzipone = new JSZip();
+							finalziptwo = new JSZip();
+							for(var name in finalzip.files)
+							{
+								if(index<finalzipbreaksize)
+								{
+									finalzipone.file(""+finalzip.files[name].name, ""+finalzip.files[name].data);
+								}
+								else
+								{
+									finalziptwo.file(""+finalzip.files[name].name, ""+finalzip.files[name].data);
+								}
+								index++; 
+							}
+							var xmldata= '<?xml version="1.0" encoding="UTF-8"?> <Package xmlns="http://soap.sforce.com/2006/04/metadata"><types><members>*</members><name>ApexClass</name></types><types><members>*</members><name>ApexComponent</name></types><types><members>*</members><name>ApexPage</name></types><types><members>*</members><name>ApexTrigger</name></types><types><members>*</members><name>ApprovalProcess</name></types><types><name>AssignmentRule</name></types><types><members>*</members><name>CustomLabels</name></types><types><members>*</members><name>CustomObject</name></types><types><members>*</members><name>CustomPageWebLink</name></types><types><members>*</members><name>CustomTab</name></types><types><members>*</members><name>Layout</name></types><types><members>*</members><name>Profile</name></types><types><name>RemoteSiteSetting</name></types><types><name>Report</name></types><types><members>*</members><name>Role</name></types><types><members>*</members><name>StaticResource</name></types><types><members>*</members><name>Workflow</name></types><version>29.0</version> </Package>';
+							var xmlname= 'package.xml';
+							finalzipone.file(xmlname, ""+xmldata);
+							finalziptwo.file(xmlname, ""+xmldata);
+							multifinalarray.push(finalzipone);
+							multifinalarray.push(finalziptwo);
+							finalzip = finalzipone;
+							var finalstr = finalzipone.generate({type:"base64"});
+							multifinalindex = 1;
+							
+							if(finalstr.length > 2900000)
+							{
+								MultiFinalDeploy(finalstr);	
+							}
+							else
+							{
+								showfinalmessage();
+							}
+						}
+					}
+					else
+					{
+						showfinalmessage();
+					}
+				} 
+				else if(!a) 
+				{
+					isAttachment = true;
+					newzipcount = 5;
+					deployNext(); 
+				}
+			}
+		}
+		
+		
+		function handleResult(r,e)
+		{
+			if(e.status) 
+			{
+				isAttachment = false;
+	        	if(r != '')
+	        	{
+	        			var removeList = new Array();
+	 
+	        			removeList = str.split(',');
+						zip = new JSZip(r, {base64:true});
+						var count1 = 0;
+						for(var name in zip.files)
+						{
+							count1++;
+						}
+				  	 	if(zip != undefined ) 
+				  	 	{
+				  	 		for(var index in removeList)
+				  	 		{
+				  	 			if(zip.files[removeList[index]]!= undefined)
+				  	 			{
+				  	 				var filepath = zip.files[removeList[index]].name;
+				  	 				var filedata = ""+zip.files[removeList[index]].data;
+				  	 				
+				  	 				if(zip.files[removeList[index]+"-meta.xml"] != undefined)
+				  	 				{
+				  	 					var xmlpath = zip.files[removeList[index]+"-meta.xml"].name;
+				  	 					var xmldata = ""+zip.files[removeList[index]+"-meta.xml"].data;
+				  	 					finalzip.file(xmlpath, xmldata);
+				  	 					zip.remove(xmlpath);
+				  	 				}
+				  	 				
+			  	 					finalzip.file(filepath, filedata);
+				  	 				
+				  	 				zip.remove(filepath);
+				  	 			}
+				  	 			else
+				  	 			{
+				  	 				
+				  	 			}	
+				  	 		}
+				  	 		newzipcount = 0;
+				  	 		for(var name in zip.files)
+				  	 		{
+				  	 			newzipcount++;
+							}
+							newzip = new JSZip();
+							for(var index in zip.files)
+							{
+								newzip.file(""+zip.files[index].name, ""+zip.files[index].data);
+							}
+							var newstr = newzip.generate({type:"base64"});    
+							onceAgainDeploy(newstr);
+				  	 	}
+				}
+			}
+			else
+			{
+				if(e.message == 'Unable to connect to the server (transaction aborted: timeout).')
+				{
+					Visualforce.remoting.timeout = Visualforce.remoting.timeout*2;
+					var attId = $("input[id$='attId']").val();
+					if(attId != undefined && isAttachment)
+					{
+						Visualforce.remoting.Manager.invokeAction(
+				            '{!$RemoteAction.SnapshotBuildController.getAttachmentBody}',
+				            attId,
+				            handleResult   
+				        );
+			        }
+			     }
+			}
+		}
+	
+	var finalzipcount = 5;
+			
+		function checkFinalRequest(v)
+		{
+			if(!v)
+			{
+				gap = setTimeout(checkFinalAsyncRequest,5000);
+			}
+			// Status done
+			else if(v)
+			{
+				clearTimeout(gap);
+				str = $("input[id$='probleItems']").val();
+				var error;
+				if(str != '')
+					error = true;
+				else
+					error = false;
+				
+				var finalcount = 0;
+				for(var name in finalzip.files)
+				{
+					finalcount ++;
+					
+				}	
+				if(error && finalcount > 4)
+				{
+					var tempEvent = {};
+		        	tempEvent.status = true;
+		        	var newstr_temp = finalzip.generate({type:"base64"});
+		        	handleFinalResult(newstr_temp, tempEvent);
+				}
+				else
+				{
+					showfinalmessage();
+				}
+			}
+		}
+		
+		function handleFinalResult(r,e)
+		{
+			if(e.status) 
+			{
+	        	if(r != '')
+	        	{
+	        			var removeList = new Array();
+	 
+	        			removeList = str.split(',');
+						finalzip = new JSZip(r, {base64:true});
+						var count1 = 0;
+						for(var name in finalzip.files)
+						{
+							count1++;
+						}
+				  	 	if(finalzip != undefined ) 
+				  	 	{
+				  	 		for(var index in removeList)
+				  	 		{
+				  	 			if(finalzip.files[removeList[index]]!= undefined)
+				  	 			{
+				  	 				var filepath = finalzip.files[removeList[index]].name;
+				  	 				var filedata = ""+finalzip.files[removeList[index]].data;
+				  	 				
+				  	 				if(finalzip.files[removeList[index]+"-meta.xml"] != undefined)
+				  	 				{
+				  	 					var xmlpath = finalzip.files[removeList[index]+"-meta.xml"].name;
+				  	 					var xmldata = ""+finalzip.files[removeList[index]+"-meta.xml"].data;
+				  	 					finalzip.remove(xmlpath);
+				  	 				}			  	 				
+				  	 				finalzip.remove(filepath);
+				  	 			}	
+				  	 		}
+							newzip = new JSZip();
+							for(var index in finalzip.files)
+							{
+								newzip.file(""+finalzip.files[index].name, ""+finalzip.files[index].data);
+							}
+							finalzip = newzip;
+							var newstr = newzip.generate({type:"base64"});  
+							onceAgainFinalDeploy(newstr);
+				  	 	}
+				}
+			}
+		}
+		
+		function checkfinalBreakDeploy(v)
+		{
+			if(!v)
+			{
+				gap = setTimeout(checkMultiFinalAsyncRequest,5000);
+			}
+			else if(v)
+			{
+				clearTimeout(gap);
+				str = $("input[id$='probleItems']").val();
+				var error;
+				if(str != '')
+					error = true;
+				else
+					error = false;
+				var finalcount = 0;
+				for(var index in finalzip.files)
+				{
+					finalcount++
+				}
+				if(error && finalcount >4)
+				{
+						var removeList = new Array();
+	 
+	        			removeList = str.split(',');
+						var count1 = 0;
+						for(var name in finalzip.files)
+						{
+							count1++;
+						}
+				  	 	if(finalzip != undefined ) 
+				  	 	{
+				  	 		for(var index in removeList)
+				  	 		{
+				  	 			if(finalzip.files[removeList[index]]!= undefined)
+				  	 			{
+				  	 				var filepath = finalzip.files[removeList[index]].name;
+				  	 				//var filedata = ""+finalzip.files[removeList[index]].data;
+				  	 				
+				  	 				if(finalzip.files[removeList[index]+"-meta.xml"] != undefined)
+				  	 				{
+				  	 					var xmlpath = finalzip.files[removeList[index]+"-meta.xml"].name;
+				  	 					//var xmldata = ""+finalzip.files[removeList[index]+"-meta.xml"].data;
+				  	 					finalzip.remove(xmlpath);
+				  	 				}			  	 				
+				  	 				finalzip.remove(filepath);
+				  	 			}	
+				  	 		}
+							newzip = new JSZip();
+							for(var index in finalzip.files)
+							{
+								newzip.file(""+finalzip.files[index].name, ""+finalzip.files[index].data);
+							}
+							finalzip = newzip;
+							var newstr = newzip.generate({type:"base64"});  
+							MultiFinalDeploy(newstr_temp);
+				  	 	}
+				}
+				else if(multifinalindex< multifinalarray.length)
+				{
+					finalzip = multifinalarray[multifinalindex];
+					var finalstr = finalzip.generate({type:"base64"});
+					
+					if(finalstr.length > 2900000)
+					{
+						MultiFinalDeploy(finalstr);	
+					}
+					else
+					{
+						showfinalmessage();
+					}
+					multifinalindex++;
+				}
+				else
+				{
+					showfinalmessage();
+				}
+			}
+		}
+		
+		$(window).bind("beforeunload",function(event) {
+	        return 'Deployment may be in progress.';
+    	});
+	</script>
+</apex:page>

@@ -1,0 +1,361 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObjectTranslation xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fields>
+        <label><!-- Division --></label>
+        <name>PegaPE__Division__c</name>
+        <picklistValues>
+            <masterLabel>None</masterLabel>
+            <translation><!-- None --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Pega SFDC SSO Division</masterLabel>
+            <translation><!-- Pega SFDC SSO Division --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Organization --></label>
+        <name>PegaPE__Organization__c</name>
+        <picklistValues>
+            <masterLabel>None</masterLabel>
+            <translation><!-- None --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Pega SFDC SSO Org</masterLabel>
+            <translation><!-- Pega SFDC SSO Org --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <help><!-- Please select your version of the Pega PRPC server. --></help>
+        <label><!-- PRPC Version --></label>
+        <name>PegaPE__PRPC_Version__c</name>
+        <picklistValues>
+            <masterLabel>PRPC 6.1</masterLabel>
+            <translation><!-- PRPC 6.1 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>PRPC 6.1 SP1</masterLabel>
+            <translation><!-- PRPC 6.1 SP1 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>PRPC 6.1 SP2</masterLabel>
+            <translation><!-- PRPC 6.1 SP2 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>PRPC 6.2</masterLabel>
+            <translation><!-- PRPC 6.2 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>PRPC 6.2 SP1</masterLabel>
+            <translation><!-- PRPC 6.2 SP1 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>PRPC 6.2 SP2</masterLabel>
+            <translation><!-- PRPC 6.2 SP2 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>PRPC 6.3</masterLabel>
+            <translation><!-- PRPC 6.3 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>PRPC 6.3 SP1</masterLabel>
+            <translation><!-- PRPC 6.3 SP1 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>PRPC 7.1</masterLabel>
+            <translation><!-- PRPC 7.1 --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <help><!-- Select the appropriate action the Gadget Manager executes when it loads the gadget, that is, the default or main action. --></help>
+        <label><!-- Pega Action --></label>
+        <name>PegaPE__PegaA__c</name>
+        <picklistValues>
+            <masterLabel>Action 1</masterLabel>
+            <translation><!-- Action 1 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Action 2</masterLabel>
+            <translation><!-- Action 2 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Action 3</masterLabel>
+            <translation><!-- Action 3 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Action 4</masterLabel>
+            <translation><!-- Action 4 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Action 5</masterLabel>
+            <translation><!-- Action 5 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>None</masterLabel>
+            <translation><!-- None --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Open Work By Url</masterLabel>
+            <translation><!-- Open Work By Url --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <help><!-- If the Pega Gadget Action is display, createNewWork, or getNextWork, specify the class that is applicable for the specified flow or harness --></help>
+        <label><!-- Pega Action Class Name --></label>
+        <name>PegaPE__PegaA_className__c</name>
+        <picklistValues>
+            <masterLabel>None</masterLabel>
+            <translation><!-- None --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Pega Action Flow Name --></label>
+        <name>PegaPE__PegaA_flowName__c</name>
+        <picklistValues>
+            <masterLabel>None</masterLabel>
+            <translation><!-- None --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <help><!-- When the action is display, select the name of a harness rule. --></help>
+        <label><!-- Pega Harness Name --></label>
+        <name>PegaPE__PegaA_harnessName__c</name>
+        <picklistValues>
+            <masterLabel>None</masterLabel>
+            <translation><!-- None --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <help><!-- PegaA_pyReportClass is to be provided when a Report Definition Harness is to be called using PegaA_query=&quot;?pyActivity=Rule-Obj-Report-Definition.pxShowReport&quot; --></help>
+        <label><!-- Pega Action Report Class Name --></label>
+        <name>PegaPE__PegaA_pyReportClass__c</name>
+        <picklistValues>
+            <masterLabel>None</masterLabel>
+            <translation><!-- None --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <help><!-- Report Definition Name which needs to be displayed E.g. MyWeeklyReport --></help>
+        <label><!-- Pega Action Report Name --></label>
+        <name>PegaPE__PegaA_pyReportName__c</name>
+    </fields>
+    <fields>
+        <help><!-- Enter the appropriate Pega Action Query E.g. ?pyActivity=Rule-Obj-Report-Definition.pxShowReport to call a Report Definition --></help>
+        <label><!-- Pega Query --></label>
+        <name>PegaPE__PegaA_query__c</name>
+    </fields>
+    <fields>
+        <help><!-- Select to make this Pega Gadget is Read Only --></help>
+        <label><!-- Pega Read Only --></label>
+        <name>PegaPE__PegaA_readOnly__c</name>
+    </fields>
+    <fields>
+        <help><!-- Select to defer loading of the Application page. This will require that the page load be initiated with a Javascript function instead of application page load --></help>
+        <label><!-- Pega Action Defer --></label>
+        <name>PegaPE__PegaDefer__c</name>
+    </fields>
+    <fields>
+        <help><!-- Select the appropriate Pega Gadget to display --></help>
+        <label><!-- Pega Gadget Name --></label>
+        <name>PegaPE__PegaGadget__c</name>
+        <picklistValues>
+            <masterLabel>Gadget 1</masterLabel>
+            <translation><!-- Gadget 1 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Gadget 2</masterLabel>
+            <translation><!-- Gadget 2 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Gadget 3</masterLabel>
+            <translation><!-- Gadget 3 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Gadget 4</masterLabel>
+            <translation><!-- Gadget 4 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Gadget 5</masterLabel>
+            <translation><!-- Gadget 5 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>None</masterLabel>
+            <translation><!-- None --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>samplepegagacasegadget</masterLabel>
+            <translation><!-- samplepegagacasegadget --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <help><!-- Select the appropriate window resize option --></help>
+        <label><!-- Pega Resize Option --></label>
+        <name>PegaPE__PegaResize__c</name>
+        <picklistValues>
+            <masterLabel>None</masterLabel>
+            <translation><!-- None --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Stretch</masterLabel>
+            <translation><!-- Stretch --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <help><!-- Select the Pega Gadget Window location option --></help>
+        <label><!-- Pega Window Target Option --></label>
+        <name>PegaPE__PegaTarget__c</name>
+        <picklistValues>
+            <masterLabel>_blank</masterLabel>
+            <translation><!-- _blank --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>_popup</masterLabel>
+            <translation><!-- _popup --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>_self</masterLabel>
+            <translation><!-- _self --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Pega Thread --></label>
+        <name>PegaPE__PegaThread__c</name>
+        <picklistValues>
+            <masterLabel>None</masterLabel>
+            <translation><!-- None --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <label><!-- Unit --></label>
+        <name>PegaPE__Unit__c</name>
+        <picklistValues>
+            <masterLabel>None</masterLabel>
+            <translation><!-- None --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Pega SFDC SSO Unit</masterLabel>
+            <translation><!-- Pega SFDC SSO Unit --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <help><!-- Select the appropriate application to display --></help>
+        <label><!-- Application Name --></label>
+        <name>PegaPE__appName__c</name>
+        <picklistValues>
+            <masterLabel>CustomProcessApplication</masterLabel>
+            <translation><!-- CustomProcessApplication --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>CustomReportApplication</masterLabel>
+            <translation><!-- CustomReportApplication --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Force Fulfillment</masterLabel>
+            <translation><!-- Force Fulfillment --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>MSFW</masterLabel>
+            <translation><!-- MSFW --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>None</masterLabel>
+            <translation><!-- None --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Pega Rules</masterLabel>
+            <translation><!-- Pega Rules --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>UCMFW</masterLabel>
+            <translation><!-- UCMFW --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>UservInsuranceProducts</masterLabel>
+            <translation><!-- UservInsuranceProducts --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <help><!-- Select to encrypt browser communications --></help>
+        <label><!-- Encrypt --></label>
+        <name>PegaPE__encrypt__c</name>
+    </fields>
+    <fields>
+        <help><!-- Select the appropriate Gateway URL based on whether you are an Internal, External or External Through Gateway user. --></help>
+        <label><!-- Gateway URL --></label>
+        <name>PegaPE__gatewayUrl__c</name>
+        <picklistValues>
+            <masterLabel>Gate Way URL 1</masterLabel>
+            <translation><!-- Gate Way URL 1 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Gate Way URL 2</masterLabel>
+            <translation><!-- Gate Way URL 2 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Gate Way URL 3</masterLabel>
+            <translation><!-- Gate Way URL 3 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Gate Way URL 4</masterLabel>
+            <translation><!-- Gate Way URL 4 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Gate Way URL 5</masterLabel>
+            <translation><!-- Gate Way URL 5 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>None</masterLabel>
+            <translation><!-- None --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>https://www.google.com</masterLabel>
+            <translation><!-- https://www.google.com --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <help><!-- Enter appropriate stylistic CSS markup to control the Pega Gadget display --></help>
+        <label><!-- Style CSS Markup --></label>
+        <name>PegaPE__style__c</name>
+    </fields>
+    <fields>
+        <help><!-- Select the appropriate Sytem ID --></help>
+        <label><!-- System ID --></label>
+        <name>PegaPE__systemID__c</name>
+        <picklistValues>
+            <masterLabel>None</masterLabel>
+            <translation><!-- None --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>mobile</masterLabel>
+            <translation><!-- mobile --></translation>
+        </picklistValues>
+    </fields>
+    <fields>
+        <help><!-- Select the appropriate Thread model --></help>
+        <label><!-- Thread --></label>
+        <name>PegaPE__thread__c</name>
+        <picklistValues>
+            <masterLabel>STANDARD</masterLabel>
+            <translation><!-- STANDARD --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Thread 1</masterLabel>
+            <translation><!-- Thread 1 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Thread 2</masterLabel>
+            <translation><!-- Thread 2 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Thread 3</masterLabel>
+            <translation><!-- Thread 3 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Thread 4</masterLabel>
+            <translation><!-- Thread 4 --></translation>
+        </picklistValues>
+        <picklistValues>
+            <masterLabel>Thread 5</masterLabel>
+            <translation><!-- Thread 5 --></translation>
+        </picklistValues>
+    </fields>
+</CustomObjectTranslation>

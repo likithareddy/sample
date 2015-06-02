@@ -1,0 +1,13 @@
+<apex:page id="thePage" standardController="copado__Deployment__c">
+    <script type="text/javascript" src="{!URLFOR($Resource.Statics,'js/libs/jquery.min.1.10.2.js')}"></script>
+    
+    <script type="text/javascript">
+        var $copado = jQuery.noConflict();
+        __sfdcSessionId = '{!GETSESSIONID()}';
+    </script>
+    <script src="/soap/ajax/32.0/connection.js"></script>
+    
+    
+    <a class="btn btn-default" href="#" data-featherlight="#copadoIframe">iFrame</a>
+    
+</apex:page>

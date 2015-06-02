@@ -1,0 +1,834 @@
+<apex:page controller="Flosum.MergeCommitController">
+	<script type="text/javascript">
+// 		var __sfdcSessionId = '{!GETSESSIONID()}';
+ 	</script>
+	<apex:includeScript value="{!URLFOR($Resource.Flosum__jszipmaster, 'jszip-master/dist/jszip.js')}"/>
+	<script src="{!$Resource.xmltojson}"></script>
+	<script src="https://x2js.googlecode.com/hg/xml2json.js"></script>
+<!-- 	<script type="text/javascript" src="/soap/ajax/33.0/connection.js"></script> -->
+<!-- 	<script type="text/javascript" src="/soap/ajax/33.0/apex.js"></script> -->
+	<style>
+		.pagination { 
+			padding: 1%; 
+		} 
+		div .pagination { 
+			text-align: center; 
+		} 
+		td .dataCell label { 
+			font-weight: normal; 
+		} 
+		span.paginationEle { 
+			margin-left: 4px; 
+		} 
+		.pagination input { 
+			margin-left: 4px; 
+		} 
+	</style>
+	<c:Wait />	
+	<apex:pagemessages id="msg"/>
+	<apex:form rendered="{!if(snapName != null || branchName != null,true,false)}" >
+		<apex:actionfunction name="insertAtts" action="{!insertAtts}" rerender="msg" oncomplete="handleinsertAttachmentsActionFunction();">
+			<apex:param assignTo="{!jsonStr}" value="" name="newstr"/>
+		</apex:actionfunction>
+		
+		<apex:actionfunction name="CallFirst" action="{!oneSectionFirst}" rerender="msg,form1" oncomplete="hide();">
+			<apex:param assignTo="{!section}" value="" name="newstr"/>
+		</apex:actionfunction>
+		<apex:actionfunction name="CallPrevious" action="{!oneSectionPrev}" rerender="msg,form1" oncomplete="hide();">
+			<apex:param assignTo="{!section}" value="" name="newstr"/>
+		</apex:actionfunction>
+		<apex:actionfunction name="CallNext" action="{!oneSectionNext}" rerender="msg,form1" oncomplete="hide();">
+			<apex:param assignTo="{!section}" value="" name="newstr"/>
+		</apex:actionfunction>
+		<apex:actionfunction name="CallLast" action="{!oneSectionLast}" rerender="msg,form1" oncomplete="hide();">
+			<apex:param assignTo="{!section}" value="" name="newstr"/>
+		</apex:actionfunction>
+		
+		<apex:sectionHeader title="{!if(CommitType == 'snapshot','Commit','Merge')}"/>
+		<apex:pageblock >
+			<apex:pageblockSection columns="1">
+				<apex:pageblocksectionItem rendered="{!if(CommitType == 'snapshot',true,false)}">
+					<apex:outputLabel value="Snapshot"/>
+					<apex:outputText value="{!snapName}"/>
+				</apex:pageblocksectionItem>
+				<apex:pageblocksectionItem rendered="{!if(CommitType == 'branch',true,false)}">
+					<apex:outputLabel value="Branch Name"/>
+					<apex:outputText value="{!branchName}"/>
+				</apex:pageblocksectionItem>
+				<apex:pageblocksectionItem rendered="{!if(CommitType == 'snapshot',true,false)}">
+					<apex:outputLabel value="Commit To"/>
+					<apex:selectList value="{!commitTo}" multiselect="false" size="1">
+						<apex:selectOptions value="{!commitList}"/>
+			        </apex:selectList>
+			    </apex:pageblocksectionItem>
+			</apex:pageblockSection>
+			<apex:pageBlockButtons rendered="{!if(CommitType == 'branch',true,false)}">
+                <apex:commandButton value="Merge" action="{!branchMerge}" reRender="msg"/>
+            </apex:pageBlockButtons>
+		</apex:pageblock>
+		<apex:outputPanel id="form1">
+			<apex:pageblock title="Conflict components" rendered="{!if(CommitType == 'branch',true,false)}">
+				<apex:pageblocktable value="{!conflictCompList}" var="item" rendered="{!if(conflictCompList.size > 0,true,false)}">
+					<apex:column headervalue="Select">
+						<apex:inputCheckbox value="{!item.check}" styleclass="sli"/>
+					</apex:column>
+		        	<apex:column value="{!item.comp.Flosum__Component_Type__c}" />
+		        	<apex:column value="{!item.comp.Flosum__Component_Name__c}" />
+		        	<apex:column value="{!item.comp.Flosum__Last_Modified_By__c}" />
+		        	
+		        	<apex:column >
+		        		<apex:commandLink target="_blank" action="{!compareComponent}" value="View Comparison">
+		        			<apex:param assignTo="{!branchComponentId}" value="{!item.branchCompId}" name="newstr"/>
+		        			<apex:param assignTo="{!repositoryComponentId}" value="{!item.repCompId}" name="newstr2"/>
+		        		</apex:commandLink>
+		        	</apex:column>
+				</apex:pageblocktable>
+				<apex:outputPanel rendered="{!if(conflictCompList.size > 0,true,false)}" layout="block" styleClass="pagination">
+						<apex:commandbutton value="First" onClick="show();CallFirst('conflict'); return false;" reRender="none" disabled="{!IsConflictPrev}"/>
+						<apex:commandbutton value="Previous" onClick="show();CallPrevious('conflict'); return false;" disabled="{!IsConflictPrev}" reRender="none"/>
+	<!-- 					<apex:outputText value="{!paginationStr}" styleClass="paginationEle"/> -->
+						<apex:commandbutton value="Next" onClick="show();CallNext('conflict'); return false;" disabled="{!IsConflictNext}" reRender="none"/>
+						<apex:commandbutton value="Last" onClick="show();CallLast('conflict'); return false;" disabled="{!IsConflictNext}" reRender="none"/>
+				</apex:outputPanel>
+				<apex:outputText value="No records to display." rendered="{!if(conflictCompList.size == 0,true,false)}"/>
+			</apex:pageblock>
+			
+			<apex:pageblock title="Safe to commit components" rendered="{!if(CommitType == 'branch',true,false)}">
+				<apex:pageblocktable value="{!newCompList}" var="item" rendered="{!if(newCompList.size > 0,true,false)}">
+		        	<apex:column value="{!item.Flosum__Component_Type__c}" />
+		        	<apex:column value="{!item.Flosum__Component_Name__c}" />
+		        	<apex:column value="{!item.Flosum__Last_Modified_By__c}" />
+				</apex:pageblocktable>
+				<apex:outputPanel rendered="{!if(newCompList.size > 0,true,false)}" layout="block" styleClass="pagination">
+						<apex:commandbutton value="First" onClick="show();CallFirst('safe'); return false;" disabled="{!IsSafeToMergePrev}" reRender="none"/>
+						<apex:commandbutton value="Previous" onClick="show();CallPrevious('safe'); return false;" disabled="{!IsSafeToMergePrev}" reRender="none"/>
+	<!-- 					<apex:outputText value="{!paginationStr}" styleClass="paginationEle"/> -->
+						<apex:commandbutton value="Next" onClick="show();CallNext('safe'); return false;" disabled="{!IsSafeToMergeNext}" reRender="none"/>
+						<apex:commandbutton value="Last" onClick="show();CallLast('safe'); return false;" disabled="{!IsSafeToMergeNext}" reRender="none"/>
+				</apex:outputPanel>
+				<apex:outputText value="No records to display." rendered="{!if(newCompList.size == 0,true,false)}"/>
+			</apex:pageblock>
+			
+			<apex:pageblock title="Components will not be merged" rendered="{!if(CommitType == 'branch',true,false)}">
+				<apex:pageblocktable value="{!notMergeCompList}" var="item" rendered="{!if(notMergeCompList.size > 0,true,false)}">
+		        	<apex:column value="{!item.Flosum__Component_Type__c}" />
+		        	<apex:column value="{!item.Flosum__Component_Name__c}" />
+		        	<apex:column value="{!item.Flosum__Last_Modified_By__c}" />
+				</apex:pageblocktable>
+				<apex:outputPanel rendered="{!if(notMergeCompList.size > 0,true,false)}" layout="block" styleClass="pagination">
+						<apex:commandbutton value="First" onClick="show();CallFirst('not'); return false;" disabled="{!IsNotToMergePrev}" reRender="none"/>
+						<apex:commandbutton value="Previous" onClick="show();CallPrevious('not'); return false;" disabled="{!IsNotToMergePrev}" reRender="none"/>
+	<!-- 					<apex:outputText value="{!paginationStr}" styleClass="paginationEle"/> -->
+						<apex:commandbutton value="Next" onClick="show();CallNext('not'); return false;" disabled="{!IsNotToMergeNext}" reRender="none"/>
+						<apex:commandbutton value="Last" onClick="show();CallLast('not'); return false;" disabled="{!IsNotToMergeNext}" reRender="none"/>
+				</apex:outputPanel>
+				<apex:outputText value="No records to display." rendered="{!if(notMergeCompList.size == 0,true,false)}"/>
+			</apex:pageblock>
+		</apex:outputPanel>
+		<apex:pageblock title="Components"  rendered="{!if(CommitType == 'snapshot',true,false)}" id="tb">
+			<apex:pageblockSection columns="1">
+				<apex:pageblocksectionItem >
+					<apex:outputLabel value="Component Type"/>
+					<apex:selectList value="{!selectedMetadataType}" multiselect="false" size="1">
+						<apex:selectOptions value="{!availableMetatypes}"/>
+						<apex:actionSupport event="onchange" action="{!fillMetadataItems}"  reRender="tb,msg" oncomplete="hide();" onsubmit="show();"/>
+			        </apex:selectList>
+			    </apex:pageblocksectionItem>
+			</apex:pageblockSection>
+			<apex:pageBlockSection id="tb" columns="1">
+				<apex:pageBlocktable value="{!metaItemList}" var="mi" rendered="{!if(metaItemList.size>0,true,false)}">
+					<apex:column headervalue="Select">
+						<apex:facet name="header"><input type="checkbox" onclick="checkItemAll(this);" styleclass="sli" >&nbsp;</input></apex:facet>
+						<apex:inputCheckbox value="{!mi.checkStatus}" styleclass="sli"/>
+					</apex:column>
+		        	<apex:column headervalue="Metadata Item Name"> <apex:outputLabel value="{!mi.comp.Flosum__API_Name__c}" /></apex:column>
+		        	<apex:column headervalue="Metadata Type"> <apex:outputLabel value="{!mi.comp.RecordType.Name}" /></apex:column>
+		        	<apex:column value="{!mi.comp.Flosum__Last_Modified_Date__c}" />
+		        	<apex:column value="{!mi.comp.LastModifiedById}" />
+		        	<apex:column value="{!mi.comp.CreatedById}" />
+		        </apex:pageBlocktable>
+		        <apex:outputPanel rendered="{!if(metaItemList.size > 0,true,false)}" layout="block" styleClass="pagination">
+						<apex:commandbutton value="First" action="{!FirstPage}" reRender="tb,msg" disabled="{!prev}" onClick="show();" onComplete="hide();"/>
+						<apex:commandbutton value="Previous" action="{!previous}" reRender="tb,msg" disabled="{!prev}" onClick="show();" onComplete="hide();"/>
+						<apex:outputText value="{!paginationStr}" styleClass="paginationEle"/>
+						<apex:commandbutton value="Next" action="{!next}" reRender="tb,msg" disabled="{!nxt}" onClick="show();" onComplete="hide();"/>
+						<apex:commandbutton value="Last" action="{!LastPage}" reRender="tb,msg" disabled="{!nxt}" onClick="show();" onComplete="hide();"/>
+				</apex:outputPanel>
+			</apex:pageBlockSection>
+			<apex:pageBlockButtons >
+                <apex:commandButton value="Commit" action="{!snapCommit}" reRender="msg" onClick="show();" onComplete="commitDetailRetriever('{!logAttId}');"/>
+            </apex:pageBlockButtons>
+		</apex:pageblock>
+		<apex:actionfunction action="{!showMessage}" reRender="msg" name="showMessage" onComplete="hide();">
+			<apex:param assignTo="{!message}" value="" name="newstr"/>
+		</apex:actionfunction>
+	</apex:form>
+	<script>
+	Visualforce.remoting.timeout = 120000;
+	var classWithNameSpace = '{!$Setup.Credentials__c.Namespace__c}'+"FlosumService";
+	var Commitwrap; 
+	var attachmentMap = {};
+	var dataMap = {};
+	var fileMap = {};
+	
+	var attList = [];
+	var jsnStrList = [];
+	var NotFoundHistoryList = [];
+	
+	var mmap = new Object();
+    mmap['CustomField'] = true;
+    mmap['CustomLabel'] = true;
+    mmap['CompactLayout'] = true;
+    mmap['WebLink'] = true;
+    mmap['RecordType'] = true;
+    mmap['ListView'] = true;
+    mmap['FieldSet'] = true;
+    mmap['AssignmentRule'] = true;
+    mmap['AutoResponseRule'] = true;
+    mmap['ValidationRule'] = true;
+    mmap['WorkflowTask'] = true;
+	mmap['WorkflowOutboundMessage'] = true;
+	mmap['WorkflowFieldUpdate'] = true;
+	mmap['WorkflowAlert'] = true;
+	mmap['WorkflowRule'] = true;
+	
+	function viewDetail(componentId)
+	{
+		window.open("/"+componentId, "_blank", "width=200, height=100");
+	}
+	
+	function commitDetailRetriever(logAttId)
+	{
+		try
+		{
+			attList = [];
+			attachmentMap = {};
+			dataMap = {};
+			fileMap = {};
+			NotFoundHistoryList = [];
+			attList = [];
+			jsnStrList = [];
+			
+			Commitwrap = new Object();
+		
+			console.log('logAttId----:'+logAttId);
+			if(logAttId != undefined && logAttId != null && logAttId != '' && logAttId.length == 18)
+			{
+				Visualforce.remoting.Manager.invokeAction(
+			        '{!$RemoteAction.MergeCommitController.getText}',
+			        logAttId,
+			        handleCommitDetail
+			    );
+			}
+		}
+		catch(err)
+		{
+			console.log(err);
+			showMessage('Uknown error.');
+		}
+	}
+	
+	function handleCommitDetail(r,e)
+	{
+	    if(e.status && r) 
+	    {
+	    	if(r != '')
+	    	{
+	    		console.log(r);
+				Commitwrap = r;
+
+				if(r.attList.length > 0)
+				{
+					attList = [];
+					var bodySize = 0;
+					var temp = [];
+					for(var i in r.attList)
+					{
+						if(i< r.attList.length)
+						{
+							var att = r.attList[i];
+							bodySize = bodySize+att.BodyLength;
+							if(bodySize > 500000 && temp.length > 0) 
+							{
+								attList.push(temp);
+								bodySize = 0;
+								temp = [];
+							}
+							temp.push(att.Id);
+						}
+					}
+					if(temp.length > 0)
+					{
+						attList.push(temp);
+					}
+				}
+				if(attList.length > 0)
+				{
+					var attSet = attList[0];
+					console.log('get attachments--'+attSet);	
+						Visualforce.remoting.Manager.invokeAction(
+				        '{!$RemoteAction.MergeCommitController.getAttachments}',
+				        JSON.stringify(attSet),
+				        handleAttachments
+				    );
+				    
+				    attList.remove(attSet);
+				}
+				else
+				{
+					showMessage('No attachment found.');
+				}
+	    	}
+	    	else
+	    	{
+	    		showMessage('Uknown error.');
+	    	}
+	    }
+	    else
+	    {
+	    	showMessage(e.message);
+	    }
+	}
+	
+	function getAttachments()
+	{
+		if(attList.length > 0)
+		{
+			var attSet = attList[0];
+			console.log('get attachments--'+attSet);	
+				Visualforce.remoting.Manager.invokeAction(
+		        '{!$RemoteAction.MergeCommitController.getAttachments}',
+		        JSON.stringify(attSet),
+		        handleAttachments
+		    ); 
+		    attList.remove(attSet);
+		}
+	}
+	
+	//change base64 to blob
+	/*function b64toBlob(b64Data, contentType, sliceSize) 
+	{
+		    contentType = contentType || '';
+		    sliceSize = sliceSize || 512;
+		
+		    var byteCharacters = atob(b64Data);
+		    var byteArrays = [];
+		
+		    for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) 
+		    {
+		        var slice = byteCharacters.slice(offset, offset + sliceSize);
+		
+		        var byteNumbers = new Array(slice.length);
+		        for (var i = 0; i < slice.length; i++) 
+		        {
+		            byteNumbers[i] = slice.charCodeAt(i);
+		        }
+		
+		        var byteArray = new Uint8Array(byteNumbers);
+		
+		        byteArrays.push(byteArray);
+		    }
+		
+		    var blob = new Blob(byteArrays, {type: contentType});
+		    return blob;
+	}*/
+	
+	function handleAttachments(r,e)
+	{
+		if(e.status && r) 
+	    {
+	    	for(var index in r)
+	    	{	
+	    		if(index < r.length)
+	    		{	
+		    		var id = r[index].parentId;
+		    		var componentType = r[index].compType;
+		    		var zip = new JSZip(r[index].base64, {base64:true});
+		    		createFileMap(componentType,zip);
+				}
+	    	}
+	    	if(attList.length > 0)
+			{
+				getAttachments();
+			}
+			else
+			{
+				jsnStrList = [];
+				var wrap = Commitwrap;
+				//generating map of data.
+				dataMap = {};
+
+				NotFoundHistoryList = [];
+				var zipWraperList = [];
+				var currentZip = new JSZip();
+				//insert attachment for new inserted components
+				for(var index in wrap.historyList)
+				{
+					if(index < wrap.historyList.length)
+					{
+						var comp = wrap.historyList[index];
+						var fileName = comp.ComponentFileName;
+						var compType = comp.ComponentComponentType;
+						var compName = comp.ComponentComponentName;
+						var compId = comp.Id;
+						
+						if(mmap[compType] == undefined)
+						{
+							var key = compType+"#"+fileName;
+							if(fileMap[key]!= undefined && compId != undefined)
+							{
+								currentZip.file(fileName,fileMap[key],{binary:true});
+								if(fileMap[key+"-meta.xml"] != undefined)
+								{
+									currentZip.file(fileName+"-meta.xml",fileMap[key+"-meta.xml"],{binary:true});
+								}
+							}
+							else
+							{
+								console.log('item not found---'+key);
+								NotFoundHistoryList.push(comp);
+							}
+						}
+						else
+						{
+							var key = compType+"#"+compName;
+							if(fileMap[key]!= undefined && compId != undefined)
+							{
+								currentZip.file(fileName,fileMap[key]);
+							}
+							else
+							{
+								console.log('item not found---'+key);
+								NotFoundHistoryList.push(comp);
+							}
+						}
+						var base64Str = currentZip.generate({type:"base64",compression:"DEFLATE"});
+						
+						
+						if(JSON.stringify(zipWraperList).length > 500000 && zipWraperList.length > 0)
+						{
+							console.log('attachment at one time---'+zipWraperList.length+'   list stringify length---'+JSON.stringify(zipWraperList).length);
+							var jsonstr = JSON.stringify(zipWraperList);
+							jsnStrList.push(jsonstr);
+							zipWraperList = [];
+						}
+						
+						var file = new Object();
+						file.parentId = ""+compId;
+						file.compType = ""+compType;
+						file.base64 = base64Str;
+						zipWraperList.push(file);
+						
+						//remove from file
+						currentZip.remove(fileName);
+						currentZip.remove(fileName+"-meta.xml");
+					}
+				
+				}
+				if(zipWraperList.length > 0)
+				{
+					console.log('attachment at one time---'+zipWraperList.length+'   list stringify length---'+JSON.stringify(zipWraperList).length);
+					var jsonstr = JSON.stringify(zipWraperList);
+					jsnStrList.push(jsonstr);
+				}
+				if(jsnStrList.length > 0)
+				{
+					insertAttachment();
+				}
+				else
+				{
+					showMessage('No metadata item found.');
+				}
+			}
+	    }
+	    else
+	    {
+	    	showMessage(e.message);
+	    }
+	}
+	
+	function createFileMap(tempComponentType,tempZip)
+	{
+		
+		if(mmap[tempComponentType] == undefined)
+    	{ 
+     			for(var fileName in tempZip.files)
+				{
+					if(fileName != undefined && fileName.charAt(fileName.length - 1) != '/' && fileName != 'package.xml' && fileName != 'undefined') 
+	            	{
+	            		var fileData = tempZip.files[fileName].asBinary();
+	            		console.log(' Data is type of blob --:'+(fileData instanceof Blob) );
+	            		fileMap[tempComponentType+"#"+fileName] = fileData;
+	            	}
+				}
+   		}
+   		else
+   		{
+     			for(var fileName in tempZip.files)
+				{
+					if(fileName != undefined && fileName.charAt(fileName.length - 1) != '/' && fileName != 'package.xml' && fileName != 'undefined') 
+	            	{
+	            		getChildFileMap(tempComponentType,tempZip.files[fileName].asText(),fileName);
+	            	}
+				}
+		}
+	}
+	
+	function getChildFileMap(metaType,xml,fileName)
+	{
+		var fullName = '';
+		if(metaType != 'CustomLabel')
+		{
+			fullName = fileName.slice(fileName.indexOf("/")+1,fileName.lastIndexOf('.'))+".";
+		}
+
+   		var x2js = new X2JS();
+   		var jsnMap ={};
+		var tempJSON = '';
+		var srcjson = x2js.xml_str2json(xml);
+		if(srcjson != undefined && srcjson != null)
+		{
+			var srcitems;
+			if(metaType == 'CustomLabel')
+			{
+				var srcMetaItem = srcjson.CustomLabels;
+				srcitems = srcMetaItem.labels;
+			}
+			else if(metaType == 'CustomField')
+			{
+				var srcMetaItem = srcjson.CustomObject;
+				srcitems = srcMetaItem.fields;
+			}
+			else if(metaType == 'ListView')
+			{
+				var srcMetaItem = srcjson.CustomObject;
+				srcitems = srcMetaItem.listViews;
+			}
+			else if(metaType == 'CompactLayout')
+			{
+				var srcMetaItem = srcjson.CustomObject;
+				srcitems = srcMetaItem.compactLayouts;
+			}
+			else if(metaType == 'WebLink')
+			{
+				var srcMetaItem = srcjson.CustomObject;
+				srcitems = srcMetaItem.webLinks;
+			}
+			else if(metaType == 'RecordType')
+			{
+				var srcMetaItem = srcjson.CustomObject;
+				srcitems = srcMetaItem.recordTypes;
+			}
+			else if(metaType == 'FieldSet')
+			{
+				var srcMetaItem = srcjson.CustomObject;
+				srcitems = srcMetaItem.fieldSets;
+			}
+			else if(metaType == 'ValidationRule')
+			{
+				var srcMetaItem = srcjson.CustomObject;
+				srcitems = srcMetaItem.validationRules;
+			}
+			else if(metaType == 'AssignmentRule')
+			{
+				var srcMetaItem = srcjson.AssignmentRules;
+				srcitems = srcMetaItem.assignmentRule;
+			}
+			else if(metaType == 'AutoResponseRule')
+			{
+				var srcMetaItem = srcjson.AutoResponseRules;
+				srcitems = srcMetaItem.autoResponseRule;
+			}
+			else if(metaType == 'WorkflowTask')
+			{
+				var srcMetaItem = srcjson.Workflow;
+				srcitems = srcMetaItem.tasks;
+			}
+			else if(metaType == 'WorkflowOutboundMessage')
+			{
+				var srcMetaItem = srcjson.Workflow;
+				srcitems = srcMetaItem.outboundMessages;
+			}
+			else if(metaType == 'WorkflowFieldUpdate')
+			{
+				var srcMetaItem = srcjson.Workflow;
+				srcitems = srcMetaItem.fieldUpdates;
+			}
+			else if(metaType == 'WorkflowAlert')
+			{
+				var srcMetaItem = srcjson.Workflow;
+				srcitems = srcMetaItem.alerts;
+			}
+			if( metaType == 'WorkflowRule')
+			{
+				var srcMetaItem = srcjson.Workflow;
+				srcitems = srcMetaItem.rules;
+			}
+			if(srcitems != undefined)
+			{
+				if(srcitems.fullName == undefined)
+			    {	
+			    	for(var i in srcitems)	
+			    	{
+			    		if(i < srcitems.length)
+			    		{
+			    			var v = srcitems[i];
+			    			jsnMap[v.fullName]= JSON.stringify(v);
+			    		}
+			    	}	    	 
+			    }
+			    else
+			    {
+				    jsnMap[srcitems.fullName] = JSON.stringify(srcitems);
+			    }
+		    }
+		}
+		for(var name in jsnMap)
+		{
+			var tempXml = '';
+			var tempJSON = jsnMap[name];
+			if(tempJSON != undefined)
+			{
+				//header
+				if(metaType == 'CustomLabel')
+				{
+					tempXml = '<?xml version="1.0" encoding="UTF-8"?><CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">';
+				}
+				else if(metaType == 'AssignmentRule' )
+				{
+					tempXml = '<?xml version="1.0" encoding="UTF-8"?><AssignmentRules xmlns="http://soap.sforce.com/2006/04/metadata">';
+				}
+				else if(metaType == 'AutoResponseRule')
+				{
+					tempXml = '<?xml version="1.0" encoding="UTF-8"?><AutoResponseRules xmlns="http://soap.sforce.com/2006/04/metadata">';
+				}
+				else if(metaType == 'WorkflowAlert' || metaType == 'WorkflowFieldUpdate'|| metaType == 'WorkflowOutboundMessage'|| metaType == 'WorkflowTask' || metaType == 'WorkflowRule')
+				{
+					tempXml = '<?xml version="1.0" encoding="UTF-8"?><Workflow xmlns="http://soap.sforce.com/2006/04/metadata">';
+				}
+				else
+				{
+					tempXml = '<?xml version="1.0" encoding="UTF-8"?><CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">';
+				}
+				//body
+				if(metaType == 'CustomLabel')
+				{
+					tempXml = tempXml +'<labels>'+x2js.json2xml_str($.parseJSON(tempJSON))+'</labels>';
+				}
+				else if(metaType == 'CustomField')
+				{
+					tempXml = tempXml +'<fields>'+x2js.json2xml_str($.parseJSON(tempJSON))+'</fields>';
+				}
+				else if(metaType == 'ListView')
+				{
+					tempXml = tempXml +'<listViews>'+x2js.json2xml_str($.parseJSON(tempJSON))+'</listViews>';
+				}
+				else if(metaType == 'CompactLayout')
+				{
+					tempXml = tempXml +'<compactLayouts>'+x2js.json2xml_str($.parseJSON(tempJSON))+'</compactLayouts>';
+				}
+				else if(metaType == 'WebLink')
+				{
+					tempXml = tempXml +'<webLinks>'+x2js.json2xml_str($.parseJSON(tempJSON))+'</webLinks>';
+				}
+				else if(metaType == 'RecordType')
+				{
+					tempXml = tempXml +'<recordTypes>'+x2js.json2xml_str($.parseJSON(tempJSON))+'</recordTypes>';
+				}
+				else if(metaType == 'FieldSet')
+				{
+					tempXml = tempXml +'<fieldSets>'+x2js.json2xml_str($.parseJSON(tempJSON))+'</fieldSets>';
+				}
+				else if(metaType == 'ValidationRule')
+				{
+					tempXml = tempXml +'<validationRules>'+x2js.json2xml_str($.parseJSON(tempJSON))+'</validationRules>';
+				}
+				else if(metaType == 'AssignmentRule')
+				{
+					tempXml = tempXml +'<assignmentRule>'+x2js.json2xml_str($.parseJSON(tempJSON))+'</assignmentRule>';
+				}
+				else if(metaType == 'AutoResponseRule')
+				{
+					tempXml = tempXml +'<autoResponseRule>'+x2js.json2xml_str($.parseJSON(tempJSON))+'</autoResponseRule>';
+				}
+				else if(metaType == 'WorkflowAlert')
+				{
+					tempXml = tempXml +'<alerts>'+x2js.json2xml_str($.parseJSON(tempJSON))+'</alerts>';
+				}
+				else if(metaType == 'WorkflowFieldUpdate')
+				{
+					tempXml = tempXml +'<fieldUpdates>'+x2js.json2xml_str($.parseJSON(tempJSON))+'</fieldUpdates>';
+				}
+				else if(metaType == 'WorkflowOutboundMessage')
+				{
+					tempXml = tempXml +'<outboundMessages>'+x2js.json2xml_str($.parseJSON(tempJSON))+'</outboundMessages>';
+				}
+				else if(metaType == 'WorkflowTask')
+				{
+					tempXml = tempXml +'<tasks>'+x2js.json2xml_str($.parseJSON(tempJSON))+'</tasks>';
+				}
+				else if(metaType == 'WorkflowRule')
+				{
+					tempXml = tempXml +'<rules>'+x2js.json2xml_str($.parseJSON(tempJSON))+'</rules>';
+				}
+				
+				//footer
+				if(metaType == 'CustomLabel')
+				{
+					tempXml = tempXml +'</CustomLabels>';
+				}
+				else if(metaType == 'AssignmentRule' )
+				{
+					tempXml = tempXml +'</AssignmentRules>';
+				}
+				else if(metaType == 'AutoResponseRule')
+				{
+					tempXml = tempXml +'</AutoResponseRules>';
+				}
+				else if(metaType == 'WorkflowAlert' || metaType == 'WorkflowFieldUpdate'|| metaType == 'WorkflowOutboundMessage'|| metaType == 'WorkflowTask' || metaType == 'WorkflowRule')
+				{
+					tempXml = tempXml +'</Workflow>';
+				}
+				else
+				{
+					tempXml = tempXml +'</CustomObject>';
+				}
+				fileMap[metaType+"#"+fullName+""+name]=	tempXml;
+			}
+		}
+	}
+	
+	/*function insertAttachment()
+	{
+		if(jsnStrList.length > 0)
+		{
+			var jsnStr = jsnStrList[0];
+			console.log('insert attachments string length-'+JSON.stringify(jsnStr).length);
+			Visualforce.remoting.Manager.invokeAction(
+		        '{!$RemoteAction.MergeCommitController.insertAttachment}',
+		        jsnStr,
+		        handleInsertAttachment
+		    );
+		    jsnStrList.remove(jsnStr);
+		}
+	}*/
+	
+	function insertAttachment()
+	{
+		if(jsnStrList.length > 0)
+		{
+			var jsnStr = jsnStrList[0];
+			console.log('insert attachments string length-'+JSON.stringify(jsnStr).length);
+		    insertAtts(jsnStr);
+		    jsnStrList.remove(jsnStr);
+		}
+	}
+	
+	function handleinsertAttachmentsActionFunction()
+	{
+		if(jsnStrList.length > 0)
+		{
+			var jsnStr = jsnStrList[0];
+			console.log('insert attachments string length-'+JSON.stringify(jsnStr).length);
+		    insertAtts(jsnStr);
+		    jsnStrList.remove(jsnStr);
+		}
+		else
+    	{
+    		if(NotFoundHistoryList.length > 0)
+    		{
+    			deleteNotFound();
+    		}
+    		else
+    		{
+    			/*console.log('commit done all items found successfully');
+    			hide();*/
+    			showMessage('Commit successfully done.#confirm');
+    		}
+    	}
+	}
+	
+	/*function handleInsertAttachment(r,e)
+	{
+		if(e.status && r) 
+	    {
+	    	if(jsnStrList.length > 0)
+	    	{
+	    		insertAttachment();
+	    	}
+	    	else
+	    	{
+	    		if(NotFoundHistoryList.length > 0)
+	    		{
+	    			deleteNotFound();
+	    		}
+	    		else
+	    		{
+	    			console.log('commit done all items found successfully');
+	    			hide();
+	    			//showMessage('Commit successfully done.#confirm');
+	    		}
+	    	}
+	    }
+	    else
+	    {
+	    	showMessage(e.message);
+	    }
+	}*/
+	
+	function deleteNotFound()
+	{
+		if(NotFoundHistoryList.length > 0)
+	    {
+	    	var li = [];
+	    	for(var index in NotFoundHistoryList)
+	    	{
+	    		if(index < NotFoundHistoryList.length)
+	    		{
+	    			li.push(""+NotFoundHistoryList[index].Id);
+	    		}
+	    	}
+	    	
+	    	
+	    	Visualforce.remoting.Manager.invokeAction(
+		        '{!$RemoteAction.MergeCommitController.deleteHistory}',
+		        JSON.stringify(li),
+		        handleDeleteNotFound
+		    );	
+	    }
+	}
+	
+	function handleDeleteNotFound(r,e)
+	{
+		if(e.status && r) 
+	    {
+	    	showMessage('Commit successfully done.#confirm');
+	    	/*console.log('commit done some items not found.');
+	    	hide();*/
+	    }
+	    else
+	    {
+	    	showMessage(e.message);
+	    }
+	}
+	
+	function checkItemAll(ele) {
+		var changeClass = ele.getAttribute('styleclass');
+		var checkboxes = document.getElementsByClassName(changeClass);
+	     if (ele.checked) {
+	         for (var i = 0; i < checkboxes.length; i++) {
+	             if (checkboxes[i].type == 'checkbox') {
+	                 checkboxes[i].checked = true;
+	             }
+	         }
+	     } else {
+	         for (var i = 0; i < checkboxes.length; i++) {
+	             console.log(i)
+	             if (checkboxes[i].type == 'checkbox') {
+	                 checkboxes[i].checked = false;
+	             }
+	         }
+	     }
+	}
+	</script>
+</apex:page>

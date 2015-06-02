@@ -1,0 +1,7 @@
+<apex:page controller="exam">
+<apex:form >
+<apex:outputText value="Watch this counter: {!count}" id="l"/>
+<apex:actionStatus startText="incrementing" stopText="done" id="s"/>
+    <apex:actionPoller action="{!Increment}" interval="5" reRender="l" status="s"/>
+</apex:form> 
+</apex:page>
