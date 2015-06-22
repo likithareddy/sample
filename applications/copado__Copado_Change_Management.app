@@ -12,4 +12,5 @@
     <tab>copado__Deployment_Flow__c</tab>
     <tab>copado__Promotion__c</tab>
     <tab>copado__Environment__c</tab>
+    <tab>demopage</tab>
 </CustomApplication>

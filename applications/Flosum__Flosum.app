@@ -6,4 +6,5 @@
     <tab>Flosum__Snapshot_Comparison</tab>
     <tab>Flosum__Patch__c</tab>
     <tab>Flosum__Settings</tab>
+    <tab>demopage</tab>
 </CustomApplication>

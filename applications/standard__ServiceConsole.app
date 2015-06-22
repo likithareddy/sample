@@ -167,39 +167,43 @@
     <tab>try__c</tab>
     <tab>Customer__c</tab>
     <tab>Pega_Cases</tab>
+    <tab>demopage</tab>
     <workspaceMappings>
         <mapping>
-            <fieldName>AccountId</fieldName>
-            <tab>standard-Opportunity</tab>
+            <tab>Customer__c</tab>
+        </mapping>
+        <mapping>
+            <tab>Pega_Cases</tab>
+        </mapping>
+        <mapping>
+            <tab>Stakeholder__c</tab>
+        </mapping>
+        <mapping>
+            <tab>demopage</tab>
+        </mapping>
+        <mapping>
+            <tab>standard-Account</tab>
         </mapping>
         <mapping>
             <fieldName>AccountId</fieldName>
             <tab>standard-Case</tab>
         </mapping>
         <mapping>
-            <tab>Customer__c</tab>
-        </mapping>
-        <mapping>
             <fieldName>AccountId</fieldName>
             <tab>standard-Contact</tab>
-        </mapping>
-        <mapping>
-            <tab>standard-Lead</tab>
-        </mapping>
-        <mapping>
-            <tab>try__c</tab>
-        </mapping>
-        <mapping>
-            <tab>Pega_Cases</tab>
         </mapping>
         <mapping>
             <tab>standard-Knowledge</tab>
         </mapping>
         <mapping>
-            <tab>Stakeholder__c</tab>
+            <tab>standard-Lead</tab>
         </mapping>
         <mapping>
-            <tab>standard-Account</tab>
+            <fieldName>AccountId</fieldName>
+            <tab>standard-Opportunity</tab>
+        </mapping>
+        <mapping>
+            <tab>try__c</tab>
         </mapping>
     </workspaceMappings>
 </CustomApplication>

@@ -1,0 +1,39 @@
+<apex:page controller="upsTrackingNumber">
+   <apex:form >
+         <apex:pageBlock title="UPS Tracking Details">
+          
+         <apex:pageBlockSection title="Details">
+        
+        AccessLicenseNumber
+        <apex:inputText value="{!AccessLicenseNumber}"/><br/>
+        UserId
+        <apex:inputText value="{!UserId}"/><br/>
+        password
+        <apex:inputText value="{!password}"/><br/>
+        trackingNumber
+        <apex:inputText value="{!trackingNumber}" id="trackingNumber"/>
+        <apex:commandButton action="{!upsBuildXmlPackageIdentifier}" value="Get Details"/>
+        
+        </apex:pageBlockSection>
+        </apex:pageBlock>
+        
+        
+    <apex:outputPanel rendered="{!show}">
+        <apex:pageBlock title="Shipping Details">
+        <apex:pageBlockSection >
+      <!--  <apex:pageBlockTable value="{!str}" var="l">
+        </apex:pageBlockTable>-->
+      <!--  <apex:outputText value="{!str}">
+        </apex:outputText>-->
+       <apex:outputText value="{!response}">
+        </apex:outputText>
+       <!-- <apex:outputText value="{!com}">
+        </apex:outputText>-->
+        
+        </apex:pageBlockSection>
+        </apex:pageBlock>
+     
+    </apex:outputPanel>
+        
+    </apex:form>
+</apex:page>

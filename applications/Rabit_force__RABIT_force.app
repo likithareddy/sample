@@ -5,4 +5,5 @@
     <label>AutoRABIT</label>
     <logo>Rabit_force__rabit_img/Rabit_force__AutoRABIT_Logo.png</logo>
     <tab>Rabit_force__RABIT_force</tab>
+    <tab>demopage</tab>
 </CustomApplication>

@@ -14,4 +14,5 @@
     <tab>copado__Environment__c</tab>
     <tab>copado__Snapshot_Difference__c</tab>
     <tab>copado__Continuous_Integration__c</tab>
+    <tab>demopage</tab>
 </CustomApplication>

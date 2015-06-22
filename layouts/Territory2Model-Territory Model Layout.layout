@@ -22,6 +22,10 @@
                 <behavior>Readonly</behavior>
                 <field>LastRunRulesEndDate</field>
             </layoutItems>
+            <layoutItems>
+                <behavior>Readonly</behavior>
+                <field>LastOppTerrAssignEndDate</field>
+            </layoutItems>
         </layoutColumns>
         <layoutColumns>
             <layoutItems>

@@ -9,4 +9,5 @@
     <tab>copado__Deployment__c</tab>
     <tab>copado__Environment__c</tab>
     <tab>copado__Account_Summary</tab>
+    <tab>demopage</tab>
 </CustomApplication>

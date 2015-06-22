@@ -14,4 +14,5 @@
     <tab>try__c</tab>
     <tab>Customer__c</tab>
     <tab>Pega_Cases</tab>
+    <tab>demopage</tab>
 </CustomApplication>

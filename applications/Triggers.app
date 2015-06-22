@@ -17,4 +17,6 @@
     <tab>Transaction__c</tab>
     <tab>Test__c</tab>
     <tab>Pega_Cases</tab>
+    <tab>DetailView</tab>
+    <tab>demopage</tab>
 </CustomApplication>
